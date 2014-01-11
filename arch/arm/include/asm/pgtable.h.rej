@@ -1,0 +1,27 @@
+***************
+*** 384,393 ****
+  #endif
+  
+  static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
+- 			      pte_t *ptep, pte_t pteval)
+  {
+  	unsigned long ext = 0;
+  
+  	if (addr < TASK_SIZE && pte_present_user(pteval)) {
+  		__sync_icache_dcache(pteval);
+  		ext |= PTE_EXT_NG;
+--- 430,443 ----
+  #endif
+  
+  static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
++ 				pte_t *ptep, pte_t pteval)
+  {
+  	unsigned long ext = 0;
+  
++ 	fcse_account_page_removal(mm, addr, pte_val(*ptep));
++ 	pte_val(pteval) =
++ 		fcse_account_page_addition(mm, addr, pte_val(pteval));
++ 
+  	if (addr < TASK_SIZE && pte_present_user(pteval)) {
+  		__sync_icache_dcache(pteval);
+  		ext |= PTE_EXT_NG;

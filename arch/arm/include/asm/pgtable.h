@@ -117,6 +117,8 @@
 #define LIBRARY_TEXT_START	0x0c000000
 
 #ifndef __ASSEMBLY__
+#include <asm/fcse.h>
+
 extern void __pte_error(const char *file, int line, pte_t);
 extern void __pmd_error(const char *file, int line, pmd_t);
 extern void __pgd_error(const char *file, int line, pgd_t);
@@ -232,9 +234,6 @@ extern pgprot_t		pgprot_kernel;
 #define pgprot_writecombine(prot) \
 	__pgprot_modify(prot, L_PTE_MT_MASK, L_PTE_MT_BUFFERABLE)
 
-#define pgprot_writethrough(prot) \
-       __pgprot_modify(prot, L_PTE_MT_MASK, L_PTE_MT_WRITETHROUGH)
-
 #ifdef CONFIG_ARM_DMA_MEM_BUFFERABLE
 #define pgprot_dmacoherent(prot) \
 	__pgprot_modify(prot, L_PTE_MT_MASK, L_PTE_MT_BUFFERABLE | L_PTE_XN)
@@ -276,6 +275,45 @@ extern pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
 #define __S111  __PAGE_SHARED_EXEC
 
 #ifndef __ASSEMBLY__
+#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
+#define fcse_account_page_removal(mm, addr, val) do {		\
+	struct mm_struct *_mm = (mm);				\
+	unsigned long _addr = (addr);				\
+	unsigned long _val = (val);				\
+	if (pte_present(_val) && ((_val) & L_PTE_SHARED))	\
+		--_mm->context.fcse.shared_dirty_pages;		\
+	if (pte_present(_val) && _addr < TASK_SIZE) {		\
+		if (_addr >= FCSE_TASK_SIZE			\
+		    && 0 == --_mm->context.fcse.high_pages)	\
+			mm->context.fcse.highest_pid = 0;	\
+	}							\
+} while (0)
+
+#define fcse_account_page_addition(mm, addr, val) ({			\
+	struct mm_struct *_mm = (mm);					\
+	unsigned long _addr = (addr);					\
+	unsigned long _val = (val);					\
+	if (pte_present(_val) && (_val & L_PTE_SHARED)) {		\
+		if ((_val & (PTE_CACHEABLE | L_PTE_RDONLY | L_PTE_DIRTY)) \
+		    != (PTE_CACHEABLE | L_PTE_DIRTY))			\
+			_val &= ~L_PTE_SHARED;                          \
+		else                                                    \
+			++_mm->context.fcse.shared_dirty_pages;         \
+	}                                                               \
+	if (pte_present(_val)						\
+	    && _addr < TASK_SIZE && _addr >= FCSE_TASK_SIZE) {		\
+		unsigned long pid = _addr / FCSE_TASK_SIZE;		\
+		++_mm->context.fcse.high_pages;				\
+		if (pid > mm->context.fcse.highest_pid)			\
+			mm->context.fcse.highest_pid = pid;		\
+	}								\
+	_val;								\
+})
+#else /* CONFIG_ARM_FCSE_GUARANTEED || !CONFIG_ARM_FCSE */
+#define fcse_account_page_removal(mm, addr, val) do { } while (0)
+#define fcse_account_page_addition(mm, addr, val) (val)
+#endif /* CONFIG_ARM_FCSE_GUARANTEED || !CONFIG_ARM_FCSE */
+
 /*
  * ZERO_PAGE is a global shared page that is always zero: used
  * for zero-mapped memory areas etc..
@@ -283,16 +321,19 @@ extern pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
 extern struct page *empty_zero_page;
 #define ZERO_PAGE(vaddr)	(empty_zero_page)
 
-
 extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 
 /* to find an entry in a page-table-directory */
 #define pgd_index(addr)		((addr) >> PGDIR_SHIFT)
 
-#define pgd_offset(mm, addr)	((mm)->pgd + pgd_index(addr))
+#define pgd_offset(mm, addr)						\
+	({								\
+		struct mm_struct *_mm = (mm);				\
+		(_mm->pgd + pgd_index(fcse_va_to_mva(_mm, (addr))));	\
+	})
 
 /* to find an entry in a kernel page-table-directory */
-#define pgd_offset_k(addr)	pgd_offset(&init_mm, addr)
+#define pgd_offset_k(addr)	(init_mm.pgd + pgd_index(addr))
 
 /*
  * The "pgd_xxx()" functions here are trivial for a folded two-level
@@ -338,7 +379,6 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 /* we don't need complex calculations here as the pmd is folded into the pgd */
 #define pmd_addr_end(addr,end)	(end)
 
-
 #ifndef CONFIG_HIGHPTE
 #define __pte_map(pmd)		pmd_page_vaddr(*(pmd))
 #define __pte_unmap(pte)	do { } while (0)
@@ -361,26 +401,10 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 #define mk_pte(page,prot)	pfn_pte(page_to_pfn(page), prot)
 
 #define set_pte_ext(ptep,pte,ext) cpu_set_pte_ext(ptep,pte,ext)
-#define pte_clear(mm,addr,ptep)	set_pte_ext(ptep, __pte(0), 0)
-
-#if __LINUX_ARM_ARCH__ < 6
-static inline void __sync_icache_dcache(pte_t pteval)
-{
-}
-#else
-extern void __sync_icache_dcache(pte_t pteval);
-#endif
-
-static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
-			      pte_t *ptep, pte_t pteval)
-{
-	if (addr >= TASK_SIZE)
-		set_pte_ext(ptep, pteval, 0);
-	else {
-		__sync_icache_dcache(pteval);
-		set_pte_ext(ptep, pteval, PTE_EXT_NG);
-	}
-}
+#define pte_clear(mm,addr,ptep)	do {				\
+	fcse_account_page_removal(mm, addr, pte_val(*ptep));	\
+	set_pte_ext(ptep, __pte(0), 0);				\
+} while (0)
 
 #define pte_none(pte)		(!pte_val(pte))
 #define pte_present(pte)	(pte_val(pte) & L_PTE_PRESENT)
@@ -393,6 +417,31 @@ static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
 #define pte_present_user(pte) \
 	((pte_val(pte) & (L_PTE_PRESENT | L_PTE_USER)) == \
 	 (L_PTE_PRESENT | L_PTE_USER))
+
+#if __LINUX_ARM_ARCH__ < 6
+static inline void __sync_icache_dcache(pte_t pteval)
+{
+}
+#else
+extern void __sync_icache_dcache(pte_t pteval);
+#endif
+
+static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
+				pte_t *ptep, pte_t pteval)
+{
+	unsigned long ext = 0;
+
+	fcse_account_page_removal(mm, addr, pte_val(*ptep));
+	pte_val(pteval) =
+		fcse_account_page_addition(mm, addr, pte_val(pteval));
+
+	if (addr < TASK_SIZE && pte_present_user(pteval)) {
+		__sync_icache_dcache(pteval);
+		ext |= PTE_EXT_NG;
+	}
+
+	set_pte_ext(ptep, pteval, ext);
+}
 
 #define PTE_BIT_FUNC(fn,op) \
 static inline pte_t pte_##fn(pte_t pte) { pte_val(pte) op; return pte; }
@@ -419,13 +468,13 @@ static inline pte_t pte_modify(pte_t pte, pgprot_t newprot)
  *
  *   3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
  *   1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
- *   <--------------- offset --------------------> <- type --> 0 0 0
+ *   <--------------- offset ----------------------> < type -> 0 0 0
  *
- * This gives us up to 63 swap files and 32GB per swap file.  Note that
+ * This gives us up to 31 swap files and 64GB per swap file.  Note that
  * the offset field is always non-zero.
  */
 #define __SWP_TYPE_SHIFT	3
-#define __SWP_TYPE_BITS		6
+#define __SWP_TYPE_BITS		5
 #define __SWP_TYPE_MASK		((1 << __SWP_TYPE_BITS) - 1)
 #define __SWP_OFFSET_SHIFT	(__SWP_TYPE_BITS + __SWP_TYPE_SHIFT)
 

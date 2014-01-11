@@ -1,0 +1,43 @@
+***************
+*** 217,225 ****
+  {
+  	struct mm_struct *mm = vma->vm_mm;
+  
+- 	if (!mm || cpumask_test_cpu(smp_processor_id(), mm_cpumask(mm)))
+- 		__cpuc_flush_user_range(start & PAGE_MASK, PAGE_ALIGN(end),
+- 					vma->vm_flags);
+  }
+  
+  static inline void
+--- 244,254 ----
+  {
+  	struct mm_struct *mm = vma->vm_mm;
+  
++ 	if (!mm || fcse_mm_in_cache(mm)) {
++ 		start = fcse_va_to_mva(mm, start & PAGE_MASK);
++ 		end = fcse_va_to_mva(mm, PAGE_ALIGN(end));
++ 		__cpuc_flush_user_range(start, end, vma->vm_flags);
++ 	}
+  }
+  
+  static inline void
+***************
+*** 227,234 ****
+  {
+  	struct mm_struct *mm = vma->vm_mm;
+  
+- 	if (!mm || cpumask_test_cpu(smp_processor_id(), mm_cpumask(mm))) {
+- 		unsigned long addr = user_addr & PAGE_MASK;
+  		__cpuc_flush_user_range(addr, addr + PAGE_SIZE, vma->vm_flags);
+  	}
+  }
+--- 256,264 ----
+  {
+  	struct mm_struct *mm = vma->vm_mm;
+  
++ 	if (!mm || fcse_mm_in_cache(mm)) {
++ 		unsigned long addr;
++ 		addr = fcse_va_to_mva(mm, user_addr) & PAGE_MASK;
+  		__cpuc_flush_user_range(addr, addr + PAGE_SIZE, vma->vm_flags);
+  	}
+  }
