@@ -139,3 +139,5 @@ quiet_cmd_timeconst  = TIMEC   $@
 targets += timeconst.h
 $(obj)/timeconst.h: $(src)/timeconst.pl FORCE
 	$(call if_changed,timeconst)
+
+obj-$(CONFIG_XENOMAI) += xenomai/
