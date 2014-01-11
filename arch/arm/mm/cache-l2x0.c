@@ -19,14 +19,21 @@
 #include <linux/init.h>
 #include <linux/spinlock.h>
 #include <linux/io.h>
+#include <linux/ipipe.h>
 
 #include <asm/cacheflush.h>
 #include <asm/hardware/cache-l2x0.h>
 
 #define CACHE_LINE_SIZE		32
 
+#ifndef CONFIG_IPIPE
+#define L2X0_SPINLOCK_LEN	4096UL
+#else
+#define L2X0_SPINLOCK_LEN	512UL
+#endif
+
 static void __iomem *l2x0_base;
-static DEFINE_SPINLOCK(l2x0_lock);
+static IPIPE_DEFINE_SPINLOCK(l2x0_lock);
 static uint32_t l2x0_way_mask;	/* Bitmask of active ways */
 static uint32_t l2x0_size;
 
@@ -187,7 +194,7 @@ static void l2x0_inv_range(unsigned long start, unsigned long end)
 	}
 
 	while (start < end) {
-		unsigned long blk_end = start + min(end - start, 4096UL);
+		unsigned long blk_end = start + min(end - start, L2X0_SPINLOCK_LEN);
 
 		while (start < blk_end) {
 			l2x0_inv_line(start);
@@ -217,7 +224,7 @@ static void l2x0_clean_range(unsigned long start, unsigned long end)
 	spin_lock_irqsave(&l2x0_lock, flags);
 	start &= ~(CACHE_LINE_SIZE - 1);
 	while (start < end) {
-		unsigned long blk_end = start + min(end - start, 4096UL);
+		unsigned long blk_end = start + min(end - start, L2X0_SPINLOCK_LEN);
 
 		while (start < blk_end) {
 			l2x0_clean_line(start);
@@ -247,7 +254,7 @@ static void l2x0_flush_range(unsigned long start, unsigned long end)
 	spin_lock_irqsave(&l2x0_lock, flags);
 	start &= ~(CACHE_LINE_SIZE - 1);
 	while (start < end) {
-		unsigned long blk_end = start + min(end - start, 4096UL);
+		unsigned long blk_end = start + min(end - start, L2X0_SPINLOCK_LEN);
 
 		debug_writel(0x03);
 		while (start < blk_end) {

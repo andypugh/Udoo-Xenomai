@@ -11,7 +11,11 @@
 	@ routine called with r0 = irq number, r1 = struct pt_regs *
 	@
 	adrne	lr, BSYM(1b)
+#ifdef CONFIG_IPIPE
+	bne	__ipipe_grab_irq
+#else
 	bne	asm_do_IRQ
+#endif
 
 #ifdef CONFIG_SMP
 	/*
@@ -24,13 +28,21 @@
 	ALT_UP_B(9997f)
 	movne	r1, sp
 	adrne	lr, BSYM(1b)
+#ifdef CONFIG_IPIPE
+	bne	__ipipe_grab_ipi
+#else
 	bne	do_IPI
+#endif
 
 #ifdef CONFIG_LOCAL_TIMERS
 	test_for_ltirq r0, r6, r5, lr
 	movne	r0, sp
 	adrne	lr, BSYM(1b)
+#ifdef CONFIG_IPIPE
+	bne	__ipipe_grab_localtimer
+#else
 	bne	do_local_timer
+#endif
 #endif
 #endif
 9997:

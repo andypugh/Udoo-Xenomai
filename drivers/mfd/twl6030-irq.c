@@ -140,7 +140,14 @@ static int twl6030_irq_thread(void *data)
 			if (sts.int_sts & 0x1) {
 				int module_irq = twl6030_irq_base +
 					twl6030_interrupt_mapping[i];
+#ifndef CONFIG_IPIPE
 				generic_handle_irq(module_irq);
+#else
+				{
+					struct irq_desc *d = irq_to_desc(module_irq);
+					d->ipipe_ack(module_irq, d);
+				}
+#endif
 
 			}
 		local_irq_enable();
@@ -353,6 +360,7 @@ int twl6030_init_irq(int irq_num, unsigned irq_base, unsigned irq_end)
 		pr_err("twl6030: could not claim irq%d: %d\n", irq_num, status);
 		goto fail_irq;
 	}
+
 	return status;
 fail_irq:
 	free_irq(irq_num, &irq_event);
@@ -372,4 +380,3 @@ int twl6030_exit_irq(void)
 	}
 	return 0;
 }
-

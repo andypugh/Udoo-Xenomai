@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 1995-2003 Russell King
  *               2001-2002 Keith Owens
- *     
+ *
  * Generate definitions needed by assembly language modules.
  * This code generates raw asm output which is post-processed to extract
  * and format the required data.
@@ -59,6 +59,9 @@ int main(void)
   DEFINE(TI_TP_VALUE,		offsetof(struct thread_info, tp_value));
   DEFINE(TI_FPSTATE,		offsetof(struct thread_info, fpstate));
   DEFINE(TI_VFPSTATE,		offsetof(struct thread_info, vfpstate));
+#ifdef CONFIG_SMP
+  DEFINE(VFP_CPU,		offsetof(union vfp_state, hard.cpu));
+#endif
 #ifdef CONFIG_ARM_THUMBEE
   DEFINE(TI_THUMBEE_STATE,	offsetof(struct thread_info, thumbee_state));
 #endif
@@ -129,5 +132,5 @@ int main(void)
   DEFINE(DMA_BIDIRECTIONAL,	DMA_BIDIRECTIONAL);
   DEFINE(DMA_TO_DEVICE,		DMA_TO_DEVICE);
   DEFINE(DMA_FROM_DEVICE,	DMA_FROM_DEVICE);
-  return 0; 
+  return 0;
 }

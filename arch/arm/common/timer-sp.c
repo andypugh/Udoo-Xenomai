@@ -25,8 +25,30 @@
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/io.h>
+#include <linux/module.h>
+#include <linux/ipipe.h>
 
 #include <asm/hardware/arm_timer.h>
+
+#ifdef CONFIG_IPIPE
+int __ipipe_mach_timerint;
+EXPORT_SYMBOL(__ipipe_mach_timerint);
+
+int __ipipe_mach_timerstolen;
+EXPORT_SYMBOL(__ipipe_mach_timerstolen);
+
+unsigned int __ipipe_mach_ticks_per_jiffy;
+EXPORT_SYMBOL(__ipipe_mach_ticks_per_jiffy);
+
+static struct __ipipe_tscinfo tsc_info = {
+	.type = IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN,
+	.u = {
+		{
+			.mask = 0xffffffff,
+		},
+	},
+};
+#endif /* CONFIG_IPIPE */
 
 static long __init sp804_get_clock_rate(const char *name)
 {
@@ -58,7 +80,8 @@ static long __init sp804_get_clock_rate(const char *name)
 	return rate;
 }
 
-void __init sp804_clocksource_init(void __iomem *base, const char *name)
+void __init sp804_clocksource_init(void __iomem *base,
+				   unsigned long phys, const char *name)
 {
 	long rate = sp804_get_clock_rate(name);
 
@@ -74,6 +97,13 @@ void __init sp804_clocksource_init(void __iomem *base, const char *name)
 
 	clocksource_mmio_init(base + TIMER_VALUE, name,
 		rate, 200, 32, clocksource_mmio_readl_down);
+
+#ifdef CONFIG_IPIPE
+	tsc_info.freq = rate;
+	tsc_info.counter_vaddr = (unsigned long)base + TIMER_VALUE;
+	tsc_info.u.counter_paddr = phys + TIMER_VALUE;
+	__ipipe_tsc_register(&tsc_info);
+#endif
 }
 
 
@@ -87,8 +117,12 @@ static irqreturn_t sp804_timer_interrupt(int irq, void *dev_id)
 {
 	struct clock_event_device *evt = dev_id;
 
+#ifndef CONFIG_IPIPE
 	/* clear the interrupt */
 	writel(1, clkevt_base + TIMER_INTCLR);
+#else /* CONFIG_IPIPE */
+	__ipipe_tsc_update();
+#endif /* CONFIG_IPIPE */
 
 	evt->event_handler(evt);
 
@@ -167,6 +201,51 @@ void __init sp804_clockevents_init(void __iomem *base, unsigned int irq,
 	evt->max_delta_ns = clockevent_delta2ns(0xffffffff, evt);
 	evt->min_delta_ns = clockevent_delta2ns(0xf, evt);
 
+#ifdef CONFIG_IPIPE
+	__ipipe_mach_timerint = irq;
+	__ipipe_mach_ticks_per_jiffy = (rate + HZ / 2) / HZ;
+#endif /* CONFIG_IPIPE */
+
 	setup_irq(irq, &sp804_timer_irq);
 	clockevents_register_device(evt);
 }
+
+#ifdef CONFIG_IPIPE
+int __ipipe_check_tickdev(const char *devname)
+{
+	/* Keep compatibility with old patches */
+	return !strcmp(devname, "TIMER1");
+}
+
+void __ipipe_mach_acktimer(void)
+{
+	writel(1, clkevt_base + TIMER_INTCLR);
+}
+
+/*
+ * Reprogram the timer
+ */
+
+void __ipipe_mach_set_dec(unsigned long delay)
+{
+	if (delay > 0xf)
+		sp804_set_next_event(delay, NULL);
+	else
+		ipipe_trigger_irq(__ipipe_mach_timerint);
+}
+EXPORT_SYMBOL(__ipipe_mach_set_dec);
+
+void __ipipe_mach_release_timer(void)
+{
+	struct clock_event_device *ckdev = &sp804_clockevent;
+	ckdev->set_mode(ckdev->mode, ckdev);
+	if (ckdev->mode == CLOCK_EVT_MODE_ONESHOT)
+		ckdev->set_next_event(__ipipe_mach_ticks_per_jiffy, ckdev);
+}
+EXPORT_SYMBOL(__ipipe_mach_release_timer);
+
+unsigned long __ipipe_mach_get_dec(void)
+{
+	return ~readl(clkevt_base + TIMER_VALUE);
+}
+#endif /* CONFIG_IPIPE */

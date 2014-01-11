@@ -34,6 +34,9 @@ int __cpuinit local_timer_setup(struct clock_event_device *evt)
 
 	evt->irq = OMAP44XX_IRQ_LOCALTIMER;
 	twd_timer_setup(evt);
+#ifdef CONFIG_IPIPE
+	gt_setup(OMAP44XX_LOCAL_TWD_BASE - 0x400, 32);
+#endif /* CONFIG_IPIPE */
+
 	return 0;
 }
-

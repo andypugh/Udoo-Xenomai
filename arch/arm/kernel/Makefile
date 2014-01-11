@@ -23,7 +23,7 @@ obj-$(CONFIG_LEDS)		+= leds.o
 obj-$(CONFIG_OC_ETM)		+= etm.o
 
 obj-$(CONFIG_ISA_DMA_API)	+= dma.o
-obj-$(CONFIG_ARCH_ACORN)	+= ecard.o 
+obj-$(CONFIG_ARCH_ACORN)	+= ecard.o
 obj-$(CONFIG_FIQ)		+= fiq.o fiqasm.o
 obj-$(CONFIG_MODULES)		+= armksyms.o module.o
 obj-$(CONFIG_ARTHUR)		+= arthur.o
@@ -69,5 +69,7 @@ endif
 head-y			:= head$(MMUEXT).o
 obj-$(CONFIG_DEBUG_LL)	+= debug.o
 obj-$(CONFIG_EARLY_PRINTK)	+= early_printk.o
+obj-$(CONFIG_IPIPE)	+= ipipe.o
+obj-$(CONFIG_IPIPE_ARM_KUSER_TSC) += ipipe_tsc.o ipipe_tsc_asm.o
 
 extra-y := $(head-y) init_task.o vmlinux.lds

@@ -42,6 +42,7 @@ do {							\
 static inline void chained_irq_enter(struct irq_chip *chip,
 				     struct irq_desc *desc)
 {
+#ifndef CONFIG_IPIPE
 	/* FastEOI controllers require no action on entry. */
 	if (chip->irq_eoi)
 		return;
@@ -53,14 +54,30 @@ static inline void chained_irq_enter(struct irq_chip *chip,
 		if (chip->irq_ack)
 			chip->irq_ack(&desc->irq_data);
 	}
+#else /* CONFIG_IPIPE */
+	if (chip->irq_eoi) {
+		chip->irq_eoi(&desc->irq_data);
+		return;
+	}
+
+	if (chip->irq_mask_ack) {
+		chip->irq_mask_ack(&desc->irq_data);
+	} else {
+		chip->irq_mask(&desc->irq_data);
+		if (chip->irq_ack)
+			chip->irq_ack(&desc->irq_data);
+	}
+#endif /* CONFIG_IPIPE */
 }
 
 static inline void chained_irq_exit(struct irq_chip *chip,
 				    struct irq_desc *desc)
 {
+#ifndef CONFIG_IPIPE
 	if (chip->irq_eoi)
 		chip->irq_eoi(&desc->irq_data);
 	else
+#endif /* !CONFIG_IPIPE */
 		chip->irq_unmask(&desc->irq_data);
 }
 #endif

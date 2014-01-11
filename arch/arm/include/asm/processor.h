@@ -24,9 +24,14 @@
 #include <asm/types.h>
 
 #ifdef __KERNEL__
+#ifndef CONFIG_ARM_FCSE
 #define STACK_TOP	((current->personality & ADDR_LIMIT_32BIT) ? \
 			 TASK_SIZE : TASK_SIZE_26)
 #define STACK_TOP_MAX	TASK_SIZE
+#else /* CONFIG_ARM_FCSE */
+#define STACK_TOP	FCSE_TASK_SIZE
+#define STACK_TOP_MAX	FCSE_TASK_SIZE
+#endif /* CONFIG_ARM_FCSE */
 #endif
 
 struct debug_info {
@@ -84,7 +89,14 @@ extern void release_thread(struct task_struct *);
 unsigned long get_wchan(struct task_struct *p);
 
 #if __LINUX_ARM_ARCH__ == 6 || defined(CONFIG_ARM_ERRATA_754327)
-#define cpu_relax()			smp_mb()
+#define cpu_relax()		do {					\
+					asm("nop");			\
+					asm("nop");			\
+					asm("nop");			\
+					asm("nop");			\
+					asm("nop");			\
+					smp_mb();			\
+				} while (0)
 #else
 #define cpu_relax()			barrier()
 #endif

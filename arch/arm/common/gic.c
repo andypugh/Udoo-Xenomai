@@ -28,12 +28,14 @@
 #include <linux/smp.h>
 #include <linux/cpumask.h>
 #include <linux/io.h>
+#include <linux/spinlock.h>
 
 #include <asm/irq.h>
 #include <asm/mach/irq.h>
 #include <asm/hardware/gic.h>
+#include <asm/ipipe.h>
 
-static DEFINE_SPINLOCK(irq_controller_lock);
+static IPIPE_DEFINE_SPINLOCK(irq_controller_lock);
 
 /* Address of GIC 0 CPU interface */
 void __iomem *gic_cpu_base_addr __read_mostly;
@@ -87,33 +89,42 @@ static inline unsigned int gic_irq(struct irq_data *d)
 static void gic_mask_irq(struct irq_data *d)
 {
 	u32 mask = 1 << (d->irq % 32);
+	unsigned long flags;
 
-	spin_lock(&irq_controller_lock);
+	spin_lock_irqsave_cond(&irq_controller_lock, flags);
 	writel_relaxed(mask, gic_dist_base(d) + GIC_DIST_ENABLE_CLEAR + (gic_irq(d) / 32) * 4);
 	if (gic_arch_extn.irq_mask)
 		gic_arch_extn.irq_mask(d);
-	spin_unlock(&irq_controller_lock);
+	spin_unlock_irqrestore_cond(&irq_controller_lock, flags);
 }
 
 static void gic_unmask_irq(struct irq_data *d)
 {
 	u32 mask = 1 << (d->irq % 32);
+	unsigned long flags;
 
-	spin_lock(&irq_controller_lock);
+	spin_lock_irqsave_cond(&irq_controller_lock, flags);
 	if (gic_arch_extn.irq_unmask)
 		gic_arch_extn.irq_unmask(d);
 	writel_relaxed(mask, gic_dist_base(d) + GIC_DIST_ENABLE_SET + (gic_irq(d) / 32) * 4);
-	spin_unlock(&irq_controller_lock);
+	spin_unlock_irqrestore_cond(&irq_controller_lock, flags);
 }
 
 static void gic_eoi_irq(struct irq_data *d)
 {
-	if (gic_arch_extn.irq_eoi) {
-		spin_lock(&irq_controller_lock);
-		gic_arch_extn.irq_eoi(d);
-		spin_unlock(&irq_controller_lock);
-	}
+	u32 mask = 1 << (d->irq % 32);
+	unsigned long flags;
 
+	spin_lock_irqsave_cond(&irq_controller_lock, flags);
+#ifdef CONFIG_IPIPE
+	writel_relaxed(mask, gic_dist_base(d) + GIC_DIST_ENABLE_CLEAR + (gic_irq(d) / 32) * 4);
+	if (gic_arch_extn.irq_mask)
+		gic_arch_extn.irq_mask(d);
+#endif /* CONFIG_IPIPE */
+	if (gic_arch_extn.irq_eoi) {
+		gic_arch_extn.irq_eoi(d);
+	}
+	spin_unlock_irqrestore_cond(&irq_controller_lock, flags);
 	writel_relaxed(gic_irq(d), gic_cpu_base(d) + GIC_CPU_EOI);
 }
 
@@ -126,6 +137,7 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
 	u32 confmask = 0x2 << ((gicirq % 16) * 2);
 	u32 confoff = (gicirq / 16) * 4;
 	bool enabled = false;
+	unsigned long flags;
 	u32 val;
 
 	/* Interrupt configuration for SGIs can't be changed */
@@ -135,7 +147,7 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
 	if (type != IRQ_TYPE_LEVEL_HIGH && type != IRQ_TYPE_EDGE_RISING)
 		return -EINVAL;
 
-	spin_lock(&irq_controller_lock);
+	spin_lock_irqsave_cond(&irq_controller_lock, flags);
 
 	if (gic_arch_extn.irq_set_type)
 		gic_arch_extn.irq_set_type(d, type);
@@ -160,7 +172,7 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
 	if (enabled)
 		writel_relaxed(enablemask, base + GIC_DIST_ENABLE_SET + enableoff);
 
-	spin_unlock(&irq_controller_lock);
+	spin_unlock_irqrestore_cond(&irq_controller_lock, flags);
 
 	return 0;
 }
@@ -180,6 +192,7 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 	void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
 	unsigned int shift = (d->irq % 4) * 8;
 	unsigned int cpu = cpumask_first(mask_val);
+	unsigned long flags;
 	u32 val, mask, bit;
 
 	if (cpu >= 8)
@@ -188,11 +201,11 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 	mask = 0xff << shift;
 	bit = 1 << (cpu + shift);
 
-	spin_lock(&irq_controller_lock);
+	spin_lock_irqsave_cond(&irq_controller_lock, flags);
 	d->node = cpu;
 	val = readl_relaxed(reg) & ~mask;
 	writel_relaxed(val | bit, reg);
-	spin_unlock(&irq_controller_lock);
+	spin_unlock_irqrestore_cond(&irq_controller_lock, flags);
 
 	return 0;
 }
@@ -218,13 +231,13 @@ static void gic_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 	struct gic_chip_data *chip_data = irq_get_handler_data(irq);
 	struct irq_chip *chip = irq_get_chip(irq);
 	unsigned int cascade_irq, gic_irq;
-	unsigned long status;
+	unsigned long status, flags;
 
 	chained_irq_enter(chip, desc);
 
-	spin_lock(&irq_controller_lock);
+	spin_lock_irqsave_cond(&irq_controller_lock, flags);
 	status = readl_relaxed(chip_data->cpu_base + GIC_CPU_INTACK);
-	spin_unlock(&irq_controller_lock);
+	spin_unlock_irqrestore_cond(&irq_controller_lock, flags);
 
 	gic_irq = (status & 0x3ff);
 	if (gic_irq == 1023)
@@ -234,7 +247,7 @@ static void gic_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 	if (unlikely(gic_irq < 32 || gic_irq > 1020 || cascade_irq >= NR_IRQS))
 		do_bad_IRQ(cascade_irq, desc);
 	else
-		generic_handle_irq(cascade_irq);
+		ipipe_handle_chained_irq(cascade_irq);
 
  out:
 	chained_irq_exit(chip, desc);
@@ -262,6 +275,38 @@ void __init gic_cascade_irq(unsigned int gic_nr, unsigned int irq)
 	irq_set_chained_handler(irq, gic_handle_cascade_irq);
 }
 
+#if defined(CONFIG_IPIPE) && defined(__IPIPE_FEATURE_PIC_MUTE)
+DECLARE_PER_CPU(__ipipe_irqbits_t, __ipipe_muted_irqs);
+
+void gic_mute(void)
+{
+	writel_relaxed(0x90, gic_data[0].cpu_base + GIC_CPU_PRIMASK);
+}
+
+void gic_unmute(void)
+{
+	writel_relaxed(0xf0, gic_data[0].cpu_base + GIC_CPU_PRIMASK);
+}
+
+void gic_set_irq_prio(int irq, int hi)
+{
+	void __iomem *dist_base;
+	unsigned gic_irqs;
+
+	if (irq < 32) /* The IPIs always are high priority */
+		return;
+
+	dist_base = gic_data[0].dist_base;
+	gic_irqs = readl_relaxed(dist_base + GIC_DIST_CTR) & 0x1f;
+	gic_irqs = (gic_irqs + 1) * 32;
+	if (gic_irqs > 1020)
+		gic_irqs = 1020;
+	if (irq >= gic_irqs)
+		return;
+
+	writeb_relaxed(hi ? 0x10 : 0xa0, dist_base + GIC_DIST_PRI + irq);
+}
+#endif /* __IPIPE_FEATURE_PIC_MUTE */
 static void __init gic_dist_init(struct gic_chip_data *gic,
 	unsigned int irq_start)
 {
@@ -344,7 +389,11 @@ static void __cpuinit gic_cpu_init(struct gic_chip_data *gic)
 	 * Set priority on PPI and SGI interrupts
 	 */
 	for (i = 0; i < 32; i += 4)
+#if !defined(CONFIG_IPIPE) || !defined(__IPIPE_FEATURE_PIC_MUTE)
 		writel_relaxed(0xa0a0a0a0, dist_base + GIC_DIST_PRI + i * 4 / 4);
+#else /* IPIPE && FEATURE_PIC_MUTE */
+		writel_relaxed(0x10101010, dist_base + GIC_DIST_PRI + i * 4 / 4);
+#endif /* IPIPE && FEATURE_PIC_MUTE */
 
 	writel_relaxed(0xf0, base + GIC_CPU_PRIMASK);
 	writel_relaxed(1, base + GIC_CPU_CTRL);

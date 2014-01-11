@@ -308,6 +308,9 @@ struct irq_chip {
 
 	void		(*irq_bus_lock)(struct irq_data *data);
 	void		(*irq_bus_sync_unlock)(struct irq_data *data);
+#ifdef CONFIG_IPIPE
+	void		(*irq_move)(struct irq_data *data);
+#endif /* CONFIG_IPIPE */
 
 	void		(*irq_cpu_online)(struct irq_data *data);
 	void		(*irq_cpu_offline)(struct irq_data *data);
@@ -500,7 +503,7 @@ extern int irq_set_handler_data(unsigned int irq, void *data);
 extern int irq_set_chip_data(unsigned int irq, void *data);
 extern int irq_set_irq_type(unsigned int irq, unsigned int type);
 extern int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry);
-extern struct irq_data *irq_get_irq_data(unsigned int irq);
+extern struct irq_data *irq_get_irq_data(unsigned int irq) __attribute__((const));
 
 static inline struct irq_chip *irq_get_chip(unsigned int irq)
 {

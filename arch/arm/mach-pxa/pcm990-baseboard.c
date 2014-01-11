@@ -25,6 +25,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c/pxa-i2c.h>
 #include <linux/pwm_backlight.h>
+#include <linux/ipipe.h>
 
 #include <media/soc_camera.h>
 
@@ -269,7 +270,7 @@ static void pcm990_irq_handler(unsigned int irq, struct irq_desc *desc)
 		desc->irq_data.chip->irq_ack(&desc->irq_data);
 		if (likely(pending)) {
 			irq = PCM027_IRQ(0) + __ffs(pending);
-			generic_handle_irq(irq);
+			ipipe_handle_chained_irq(irq);
 		}
 		pending = (~PCM990_INTSETCLR) & pcm990_irq_enabled;
 	} while (pending);

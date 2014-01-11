@@ -427,7 +427,16 @@
 #define INTCPS_NR_MIR_REGS	3
 #define INTCPS_NR_IRQS		96
 
+#ifndef CONFIG_ARCH_OMAP1
+#define __IPIPE_FEATURE_PIC_MUTE
+#endif /* OMAP2 || OMAP3 || OMAP4 */
+
 #ifndef __ASSEMBLY__
+
+#if defined(CONFIG_ARCH_OMAP4) && defined(CONFIG_SMP)
+#include <asm/smp_twd.h>
+#endif /* CONFIG_ARCH_OMAP4 */
+
 extern void omap_init_irq(void);
 extern int omap_irq_pending(void);
 void omap_intc_save_context(void);

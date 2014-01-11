@@ -15,6 +15,7 @@
 #include <linux/irq.h>
 #include <linux/ioport.h>
 #include <linux/syscore_ops.h>
+#include <linux/ipipe.h>
 
 #include <mach/hardware.h>
 #include <asm/mach/irq.h>
@@ -125,7 +126,7 @@ sa1100_high_gpio_handler(unsigned int irq, struct irq_desc *desc)
 		mask >>= 11;
 		do {
 			if (mask & 1)
-				generic_handle_irq(irq);
+				ipipe_handle_chained_irq(irq);
 			mask >>= 1;
 			irq++;
 		} while (mask);
@@ -217,6 +218,9 @@ static struct irq_chip sa1100_normal_chip = {
 	.name		= "SC",
 	.irq_ack	= sa1100_mask_irq,
 	.irq_mask	= sa1100_mask_irq,
+#ifdef CONFIG_IPIPE
+	.irq_mask_ack	= sa1100_mask_irq,
+#endif /* CONFIG_IPIPE */
 	.irq_unmask	= sa1100_unmask_irq,
 	.irq_set_wake	= sa1100_set_wake,
 };
@@ -255,7 +259,7 @@ static int sa1100irq_suspend(void)
 	 */
 	GRER = PWER & GPIO_IRQ_rising_edge;
 	GFER = PWER & GPIO_IRQ_falling_edge;
-	
+
 	/*
 	 * Clear any pending GPIO interrupts.
 	 */

@@ -560,6 +560,7 @@ void mmput(struct mm_struct *mm)
 		ksm_exit(mm);
 		khugepaged_exit(mm); /* must run before exit_mmap */
 		exit_mmap(mm);
+ 		ipipe_cleanup_notify(mm);
 		set_mm_exe_file(mm, NULL);
 		if (!list_empty(&mm->mmlist)) {
 			spin_lock(&mmlist_lock);
@@ -1003,6 +1004,7 @@ static void copy_flags(unsigned long clone_flags, struct task_struct *p)
 	new_flags |= PF_FORKNOEXEC;
 	new_flags |= PF_STARTING;
 	p->flags = new_flags;
+	ipipe_clear_flags(p);
 	clear_freeze_flag(p);
 }
 
@@ -1369,6 +1371,10 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	cgroup_post_fork(p);
 	if (clone_flags & CLONE_THREAD)
 		threadgroup_fork_read_unlock(current);
+#ifdef CONFIG_IPIPE
+	p->ipipe_flags = 0;
+	memset(p->ptd, 0, sizeof(p->ptd));
+#endif /* CONFIG_IPIPE */
 	perf_event_fork(p);
 	return p;
 

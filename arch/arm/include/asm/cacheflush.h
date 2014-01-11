@@ -147,6 +147,27 @@ extern void __cpuc_coherent_kern_range(unsigned long, unsigned long);
 extern void __cpuc_coherent_user_range(unsigned long, unsigned long);
 extern void __cpuc_flush_dcache_area(void *, size_t);
 
+#ifdef CONFIG_ARM_FCSE
+#define FCSE_CACHE_MASK (~(L1_CACHE_BYTES - 1))
+#define FCSE_CACHE_ALIGN(addr) (((addr) + ~FCSE_CACHE_MASK) & FCSE_CACHE_MASK)
+
+static inline void
+fcse_flush_cache_user_range(struct vm_area_struct *vma,
+			    unsigned long start, unsigned long end)
+{
+	if (cache_is_vivt()
+	    && fcse_mm_in_cache(vma->vm_mm)) {
+		start = fcse_va_to_mva(vma->vm_mm, start & FCSE_CACHE_MASK);
+		end = fcse_va_to_mva(vma->vm_mm, FCSE_CACHE_ALIGN(end));
+		__cpuc_flush_user_range(start, end, vma->vm_flags);
+	}
+}
+#undef FCSE_CACHE_MASK
+#undef FCSE_CACHE_ALIGN
+#else /* ! CONFIG_ARM_FCSE */
+#define fcse_flush_cache_user_range(vma, start, end) do { } while (0)
+#endif /* ! CONFIG_ARM_FCSE */
+
 /*
  * These are private to the dma-mapping API.  Do not use directly.
  * Their sole purpose is to ensure that data held in the cache

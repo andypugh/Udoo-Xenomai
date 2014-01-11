@@ -320,8 +320,15 @@ static int twl4030_irq_thread(void *data)
 		for (module_irq = twl4030_irq_base;
 				pih_isr;
 				pih_isr >>= 1, module_irq++) {
+#ifndef CONFIG_IPIPE
 			if (pih_isr & 0x1)
 				generic_handle_irq(module_irq);
+#else
+			if (pih_isr & 0x1) {
+				struct irq_desc *d = irq_to_desc(module_irq);
+				d->ipipe_ack(module_irq, d);
+			}
+#endif
 		}
 		local_irq_enable();
 

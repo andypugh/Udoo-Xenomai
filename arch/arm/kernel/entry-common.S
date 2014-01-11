@@ -2,6 +2,7 @@
  *  linux/arch/arm/kernel/entry-common.S
  *
  *  Copyright (C) 2000 Russell King
+ *  Copyright (C) 2005 Stelian Pop.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -37,6 +38,13 @@ ret_fast_syscall:
 	arch_ret_to_user r1, lr
 
 	restore_user_regs fast = 1, offset = S_OFF
+
+#ifdef CONFIG_IPIPE
+__ipipe_fast_exit_syscall:
+	disable_irq				@ disable interrupts
+	slow_restore_user_regs
+#endif /* CONFIG_IPIPE */
+
  UNWIND(.fnend		)
 
 /*
@@ -49,6 +57,7 @@ work_pending:
 	bne	work_resched
 	tst	r1, #_TIF_SIGPENDING|_TIF_NOTIFY_RESUME
 	beq	no_work_pending
+	enable_irq_cond
 	mov	r0, sp				@ 'regs'
 	mov	r2, why				@ 'syscall'
 	tst	r1, #_TIF_SIGPENDING		@ delivering a signal?
@@ -57,6 +66,7 @@ work_pending:
 	b	ret_slow_syscall		@ Check work again
 
 work_resched:
+	enable_irq_cond
 	bl	schedule
 /*
  * "slow" syscall return path.  "why" tells us if this was a real syscall.
@@ -72,10 +82,7 @@ no_work_pending:
 #if defined(CONFIG_IRQSOFF_TRACER)
 	asm_trace_hardirqs_on
 #endif
-	/* perform architecture specific actions before user return */
-	arch_ret_to_user r1, lr
-
-	restore_user_regs fast = 0, offset = 0
+	slow_restore_user_regs
 ENDPROC(ret_to_user_from_irq)
 ENDPROC(ret_to_user)
 
@@ -83,6 +90,7 @@ ENDPROC(ret_to_user)
  * This is how we return from a fork.
  */
 ENTRY(ret_from_fork)
+	enable_irq_cond
 	bl	schedule_tail
 	get_thread_info tsk
 	ldr	r1, [tsk, #TI_FLAGS]		@ check for syscall tracing
@@ -326,8 +334,8 @@ ENDPROC(ftrace_stub)
  *-----------------------------------------------------------------------------
  */
 
-	/* If we're optimising for StrongARM the resulting code won't 
-	   run on an ARM7 and we can save a couple of instructions.  
+	/* If we're optimising for StrongARM the resulting code won't
+	   run on an ARM7 and we can save a couple of instructions.
 								--pb */
 #ifdef CONFIG_CPU_ARM710
 #define A710(code...) code
@@ -353,6 +361,16 @@ ENTRY(vector_swi)
 	str	r8, [sp, #S_PSR]		@ Save CPSR
 	str	r0, [sp, #S_OLD_R0]		@ Save OLD_R0
 	zero_fp
+#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
+	mov	r4, lr
+	mov	r0, #1		/* IPIPE_TRACE_BEGIN */
+	mov	r3, #0x90000000
+	sub	r2, lr, #4	/* calling PC */
+	mov	r1, pc
+	bl	ipipe_trace_asm
+	mov	lr, r4
+	ldm	sp, {r0 - r4}
+#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
 	/*
 	 * Get the system call number.
@@ -412,7 +430,9 @@ ENTRY(vector_swi)
 #endif
 	enable_irq
 
+#ifndef	CONFIG_IPIPE
 	get_thread_info tsk
+#endif /* !CONFIG_IPIPE */
 	adr	tbl, sys_call_table		@ load syscall table pointer
 
 #if defined(CONFIG_OABI_COMPAT)
@@ -430,6 +450,16 @@ ENTRY(vector_swi)
 	eor	scno, scno, #__NR_SYSCALL_BASE	@ check OS number
 #endif
 
+#ifdef CONFIG_IPIPE
+	mov	r1, sp
+	mov	r0, scno
+	bl	__ipipe_syscall_root
+	cmp	r0, #0
+	bgt	__ipipe_fast_exit_syscall
+	get_thread_info tsk
+	blt	ret_slow_syscall
+	ldmia	sp, { r0 - r3 }
+#endif /* CONFIG_IPIPE */
 	ldr	r10, [tsk, #TI_FLAGS]		@ check for syscall tracing
 	stmdb	sp!, {r4, r5}			@ push fifth and sixth args
 
@@ -437,7 +467,7 @@ ENTRY(vector_swi)
 	tst	r10, #_TIF_SECCOMP
 	beq	1f
 	mov	r0, scno
-	bl	__secure_computing	
+	bl	__secure_computing
 	add	r0, sp, #S_R0 + S_OFF		@ pointer to regs
 	ldmia	r0, {r0 - r3}			@ have to reload r0 - r3
 1:
@@ -454,7 +484,7 @@ ENTRY(vector_swi)
 2:	mov	why, #0				@ no longer a real syscall
 	cmp	scno, #(__ARM_NR_BASE - __NR_SYSCALL_BASE)
 	eor	r0, scno, #__NR_SYSCALL_BASE	@ put OS number back
-	bcs	arm_syscall	
+	bcs	arm_syscall
 	b	sys_ni_syscall			@ not private func
 ENDPROC(vector_swi)
 
@@ -489,6 +519,9 @@ __sys_trace_return:
 	.type	__cr_alignment, #object
 __cr_alignment:
 	.word	cr_alignment
+#endif
+#ifdef CONFIG_IPIPE
+	.word	__ipipe_syscall_root
 #endif
 	.ltorg
 
@@ -645,3 +678,28 @@ ENTRY(sys_oabi_call_table)
 
 #endif
 
+
+#ifdef CONFIG_FRAME_POINTER
+
+	.text
+	.align 0
+	.type arm_return_addr %function
+	.global arm_return_addr
+
+arm_return_addr:
+	mov	ip, r0
+	mov	r0, fp
+3:
+	cmp	r0, #0
+	beq	1f		@ frame list hit end, bail
+	cmp	ip, #0
+	beq	2f		@ reached desired frame
+	ldr	r0, [r0, #-12]  @ else continue, get next fp
+	sub	ip, ip, #1
+	b	3b
+2:
+	ldr	r0, [r0, #-4]   @ get target return address
+1:
+	mov	pc, lr
+
+#endif

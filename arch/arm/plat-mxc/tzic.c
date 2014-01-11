@@ -15,6 +15,7 @@
 #include <linux/device.h>
 #include <linux/errno.h>
 #include <linux/io.h>
+#include <linux/ipipe.h>
 
 #include <asm/mach/irq.h>
 
@@ -130,6 +131,9 @@ static struct mxc_irq_chip mxc_tzic_chip = {
 		.name = "MXC_TZIC",
 		.irq_ack = tzic_mask_irq,
 		.irq_mask = tzic_mask_irq,
+#ifdef CONFIG_IPIPE
+		.irq_mask_ack = tzic_mask_irq,
+#endif /* CONFIG_IPIPE */
 		.irq_unmask = tzic_unmask_irq,
 		.irq_set_wake = tzic_set_wake_irq,
 	},
@@ -137,6 +141,27 @@ static struct mxc_irq_chip mxc_tzic_chip = {
 	.set_irq_fiq = tzic_set_irq_fiq,
 #endif
 };
+#if defined(CONFIG_IPIPE) && defined(__IPIPE_FEATURE_PIC_MUTE)
+DEFINE_PER_CPU(__ipipe_irqbits_t, __ipipe_muted_irqs);
+
+void tzic_set_irq_prio(unsigned irq, unsigned hi)
+{
+	if (irq >= MXC_INTERNAL_IRQS)
+		return;
+
+	__raw_writeb(hi ? 0 : 0x80, tzic_base + TZIC_PRIORITY0 + irq);
+}
+
+void ipipe_mute_pic(void)
+{
+	__raw_writel(0x10, tzic_base + TZIC_PRIOMASK);
+}
+
+void ipipe_unmute_pic(void)
+{
+	__raw_writel(0xf0, tzic_base + TZIC_PRIOMASK);
+}
+#endif /* CONFIG_IPIPE && __IPIPE_FEATURE_PIC_MUTE */
 
 /*
  * This function initializes the TZIC hardware and disables all the
@@ -154,8 +179,13 @@ void __init tzic_init_irq(void __iomem *irqbase)
 	i = __raw_readl(tzic_base + TZIC_INTCNTL);
 
 	__raw_writel(0x80010001, tzic_base + TZIC_INTCNTL);
+#ifndef CONFIG_IPIPE
 	__raw_writel(0x1f, tzic_base + TZIC_PRIOMASK);
 	__raw_writel(0x02, tzic_base + TZIC_SYNCCTRL);
+#else
+	__raw_writel(0xf0, tzic_base + TZIC_PRIOMASK);
+	__raw_writel(0, tzic_base + TZIC_SYNCCTRL);
+#endif
 
 	for (i = 0; i < 4; i++)
 		__raw_writel(0xFFFFFFFF, tzic_base + TZIC_INTSEC0(i));

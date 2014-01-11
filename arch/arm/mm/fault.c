@@ -74,6 +74,10 @@ void show_pte(struct mm_struct *mm, unsigned long addr)
 	if (!mm)
 		mm = &init_mm;
 
+#ifdef CONFIG_ARM_FCSE
+	printk(KERN_ALERT "fcse pid: %ld, 0x%08lx\n",
+	       mm->context.fcse.pid >> FCSE_PID_SHIFT, mm->context.fcse.pid);
+#endif /* CONFIG_ARM_FCSE */
 	printk(KERN_ALERT "pgd = %p\n", mm->pgd);
 	pgd = pgd_offset(mm, addr);
 	printk(KERN_ALERT "[%08lx] *pgd=%08llx",
@@ -177,10 +181,20 @@ __do_user_fault(struct task_struct *tsk, unsigned long addr,
 	if (user_debug & UDBG_SEGV) {
 		printk(KERN_DEBUG "%s: unhandled page fault (%d) at 0x%08lx, code 0x%03x\n",
 		       tsk->comm, sig, addr, fsr);
+#ifdef CONFIG_ARM_FCSE_DYNPID
+		/* Disable preemption to avoid page tables changing under our
+		   feet */
+		preempt_disable();
+#endif /* CONFIG_ARM_FCSE_DYNPID */
 		show_pte(tsk->mm, addr);
+#ifdef CONFIG_ARM_FCSE_DYNPID
+		preempt_enable();
+#endif /* CONFIG_ARM_FCSE_DYNPID */
 		show_regs(regs);
 	}
 #endif
+
+	fcse_notify_segv(tsk->mm, addr, regs);
 
 	tsk->thread.address = addr;
 	tsk->thread.error_code = fsr;
@@ -282,6 +296,9 @@ do_page_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 	int fault, sig, code;
 
 	if (notify_page_fault(regs, fsr))
+		return 0;
+
+	if (ipipe_trap_notify(IPIPE_TRAP_ACCESS,regs))
 		return 0;
 
 	tsk = current;
@@ -411,6 +428,9 @@ do_translation_fault(unsigned long addr, unsigned int fsr,
 	if (addr < TASK_SIZE)
 		return do_page_fault(addr, fsr, regs);
 
+	if (ipipe_trap_notify(IPIPE_TRAP_ACCESS,regs))
+		return 0;
+
 	if (user_mode(regs))
 		goto bad_area;
 
@@ -473,6 +493,10 @@ do_translation_fault(unsigned long addr, unsigned int fsr,
 static int
 do_sect_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 {
+
+	if (ipipe_trap_notify(IPIPE_TRAP_SECTION,regs))
+		return 0;
+
 	do_bad_area(addr, fsr, regs);
 	return 0;
 }
@@ -483,6 +507,9 @@ do_sect_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 static int
 do_bad(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 {
+	if (ipipe_trap_notify(IPIPE_TRAP_DABT,regs))
+		return 0;
+
 	return 1;
 }
 
@@ -558,6 +585,9 @@ do_DataAbort(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 	struct siginfo info;
 
 	if (!inf->fn(addr, fsr & ~FSR_LNX_PF, regs))
+		return;
+
+	if (ipipe_trap_notify(IPIPE_TRAP_UNKNOWN,regs))
 		return;
 
 	printk(KERN_ALERT "Unhandled fault: %s (0x%03x) at 0x%08lx\n",
@@ -660,3 +690,50 @@ static int __init exceptions_init(void)
 }
 
 arch_initcall(exceptions_init);
+
+#ifdef CONFIG_IPIPE
+extern spinlock_t pgd_lock;
+extern struct page *pgd_list;
+
+static void vmalloc_sync_one(pgd_t *pgd, unsigned long addr)
+{
+	unsigned int index = pgd_index(addr);
+	pgd_t *pgd_k;
+	pud_t *pud, *pud_k;
+	pmd_t *pmd, *pmd_k;
+
+	pgd += index;
+	pgd_k = init_mm.pgd + index;
+
+	if (!pgd_present(*pgd))
+		set_pgd(pgd, *pgd_k);
+
+	pud = pud_offset(pgd, addr);
+	pud_k = pud_offset(pgd_k, addr);
+
+	if (!pud_present(*pud))
+		set_pud(pud, *pud_k);
+
+	pmd   = pmd_offset(pud, addr);
+	pmd_k = pmd_offset(pud_k, addr);
+
+	copy_pmd(pmd, pmd_k);
+}
+
+void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
+{
+	unsigned long next, addr = start;
+
+	do {
+		unsigned long flags;
+		struct page *page;
+
+		next = pgd_addr_end(addr, end);
+		spin_lock_irqsave(&pgd_lock, flags);
+		for (page = pgd_list; page; page = (struct page *)page->index)
+			vmalloc_sync_one(page_address(page), addr);
+		spin_unlock_irqrestore(&pgd_lock, flags);
+
+	} while (addr = next, addr != end);
+}
+#endif /* CONFIG_IPIPE */

@@ -86,6 +86,9 @@ static struct irq_chip pxa_internal_irq_chip = {
 	.name		= "SC",
 	.irq_ack	= pxa_mask_irq,
 	.irq_mask	= pxa_mask_irq,
+#ifdef CONFIG_IPIPE
+	.irq_mask_ack	= pxa_mask_irq,
+#endif /* CONFIG_IPIPE */
 	.irq_unmask	= pxa_unmask_irq,
 };
 

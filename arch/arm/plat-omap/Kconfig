@@ -138,10 +138,10 @@ config OMAP_IOMMU_DEBUG
        tristate "Export OMAP IOMMU internals in DebugFS"
        depends on OMAP_IOMMU && DEBUG_FS
        help
-         Select this to see extensive information about
-         the internal state of OMAP IOMMU in debugfs.
+	 Select this to see extensive information about
+	 the internal state of OMAP IOMMU in debugfs.
 
-         Say N unless you know you need this.
+	 Say N unless you know you need this.
 
 config OMAP_IOMMU_IVA2
 	bool
@@ -154,6 +154,7 @@ config OMAP_MPU_TIMER
 	  timer provides more intra-tick resolution than the 32KHz timer,
 	  but consumes more power.
 
+if !IPIPE || SMP
 config OMAP_32K_TIMER
 	bool "Use 32KHz timer"
 	depends on ARCH_OMAP16XX || ARCH_OMAP2PLUS
@@ -164,6 +165,7 @@ config OMAP_32K_TIMER
 	  support for no tick during idle. The 32KHz timer provides less
 	  intra-tick resolution than OMAP_MPU_TIMER. The 32KHz timer is
 	  currently only available for OMAP16XX, 24XX, 34XX and OMAP4.
+endif
 
 config OMAP3_L2_AUX_SECURE_SAVE_RESTORE
 	bool "OMAP3 HS/EMU save and restore for L2 AUX control register"

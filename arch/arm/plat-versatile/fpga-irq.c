@@ -3,6 +3,7 @@
  */
 #include <linux/irq.h>
 #include <linux/io.h>
+#include <linux/ipipe.h>
 
 #include <asm/mach/irq.h>
 #include <plat/fpga-irq.h>
@@ -42,7 +43,7 @@ static void fpga_irq_handle(unsigned int irq, struct irq_desc *desc)
 		irq = ffs(status) - 1;
 		status &= ~(1 << irq);
 
-		generic_handle_irq(irq + f->irq_start);
+		ipipe_handle_chained_irq(irq + f->irq_start);
 	} while (status);
 }
 
@@ -52,6 +53,9 @@ void __init fpga_irq_init(int parent_irq, u32 valid, struct fpga_irq_data *f)
 
 	f->chip.irq_ack = fpga_irq_mask;
 	f->chip.irq_mask = fpga_irq_mask;
+#ifdef CONFIG_IPIPE
+	f->chip.irq_mask_ack = fpga_irq_mask;
+#endif
 	f->chip.irq_unmask = fpga_irq_unmask;
 
 	if (parent_irq != -1) {
