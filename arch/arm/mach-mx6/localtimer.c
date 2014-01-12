@@ -31,5 +31,8 @@ int __cpuinit local_timer_setup(struct clock_event_device *evt)
 {
 	evt->irq = IRQ_LOCALTIMER;
 	twd_timer_setup(evt);
+#ifdef CONFIG_IPIPE
+	gt_setup(LOCAL_TWD_ADDR - 0x400, 32);
+#endif /* CONFIG_IPIPE */
 	return 0;
 }

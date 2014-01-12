@@ -51,6 +51,7 @@ config ARCH_MX51
 config ARCH_MX6
 	bool "MX6-based"
 	select CPU_V7
+	select LOCAL_TIMERS if IPIPE && SMP
 	help
 	  This enable support for systems based on the Freescale i.MX 6 Series family
 

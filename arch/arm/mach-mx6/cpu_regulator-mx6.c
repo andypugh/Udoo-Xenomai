@@ -113,6 +113,10 @@ void mx6_cpu_regulator_init(void)
 			if (IS_ERR(pu_regulator))
 				printk(KERN_ERR "%s: failed to get pu regulator\n",
 					__func__);
+			
+			    #if defined(CONFIG_IPIPE) && defined(CONFIG_SMP)
+			    ipipe_twd_update_freq();
+			    #endif /* CONFIG_IPIPE && CONFIG_SMP */
 			else
 				/* set pu to higheset setpoint voltage. */
 				regulator_set_voltage(pu_regulator,

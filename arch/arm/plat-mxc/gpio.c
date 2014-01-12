@@ -376,6 +376,31 @@ int mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
 
 #if defined(CONFIG_IPIPE) && defined(__IPIPE_FEATURE_PIC_MUTE)
 extern void tzic_set_irq_prio(int irq, int hi);
+extern void gic_mute(void);
+extern void gic_unmute(void);
+extern void gic_set_irq_prio(int irq, int hi);
+
+static void set_irq_prio(int irq, int hi)
+{
+#ifdef CONFIG_MXC_TZIC
+       tzic_set_irq_prio(irq, hi);
+#elif defined(CONFIG_ARM_GIC)
+       gic_set_irq_prio(irq, hi);
+#endif
+}
+
+#ifdef CONFIG_ARM_GIC
+void ipipe_mute_pic(void)
+{
+       gic_mute();
+}
+
+void ipipe_unmute_pic(void)
+{
+       gic_unmute();
+}
+#endif /* CONFIG_ARM_GIC */
+
 
 void __ipipe_mach_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
 {
@@ -393,11 +418,11 @@ void __ipipe_mach_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
 			if (port->nonroot_gpios == (1 << (gpio % 32))) {
 				__ipipe_irqbits[(port->irq / 32)]
 					&= ~(1 << (port->irq % 32));
-				tzic_set_irq_prio(port->irq, 1);
+				set_irq_prio(port->irq, 1);
 			}
 		}
 	} else
-		tzic_set_irq_prio(irq, ipd != &ipipe_root);
+		set_irq_prio(irq, ipd != &ipipe_root);
 }
 
 void __ipipe_mach_disable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
@@ -414,12 +439,12 @@ void __ipipe_mach_disable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
 		if (ipd != &ipipe_root) {
 			port->nonroot_gpios &= ~(1 << (gpio % 32));
 			if (!port->nonroot_gpios) {
-				tzic_set_irq_prio(port->irq, 0);
+				set_irq_prio(port->irq, 0);
 				__ipipe_irqbits[(port->irq / 32)]
 					|= (1 << (port->irq % 32));
 			}
 		}
 	} else if (ipd != &ipipe_root)
-		tzic_set_irq_prio(irq, 0);
+		set_irq_prio(irq, 0);
 }
 #endif /* CONFIG_IPIPE && __IPIPE_FEATURE_PIC_MUTE */

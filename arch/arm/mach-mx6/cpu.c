@@ -33,7 +33,12 @@
 #include "cpu_op-mx6.h"
 
 struct cpu_op *(*get_cpu_op)(int *op);
+#if !defined(CONFIG_IPIPE) || !defined(CONFIG_SMP)
 bool enable_wait_mode = true;
+#else /* IPIPE && SMP */
+bool enable_wait_mode = false;
+#endif /* IPIPE && SMP */
+
 u32 enable_ldo_mode = LDO_MODE_DEFAULT;
 u32 arm_max_freq = CPU_AT_1_2GHz;
 bool mem_clk_on_in_wait;
@@ -227,6 +232,10 @@ postcore_initcall(post_cpu_init);
 static int __init enable_wait(char *p)
 {
 	if (memcmp(p, "on", 2) == 0) {
+#ifdef CONFIG_IPIPE
+		if (num_possible_cpus() > 1)
+			return 0;
+#endif /* IPIPE && SMP */
 		enable_wait_mode = true;
 		p += 2;
 	} else if (memcmp(p, "off", 3) == 0) {
@@ -275,6 +284,3 @@ static int __init enable_mem_clk_in_wait(char *p)
 }
 
 early_param("mem_clk_on", enable_mem_clk_in_wait);
-
-
-

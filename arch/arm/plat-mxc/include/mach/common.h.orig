@@ -44,7 +44,7 @@ extern void mx50_init_irq(void);
 extern void mx51_init_irq(void);
 extern void mx53_init_irq(void);
 extern void epit_timer_init(struct clk *timer_clk, void __iomem *base, int irq);
-extern void mxc_timer_init(struct clk *timer_clk, void __iomem *, int);
+extern void mxc_timer_init(struct clk *timer_clk, void __iomem *, unsigned long, int);
 extern int mx1_clocks_init(unsigned long fref);
 extern int mx21_clocks_init(unsigned long lref, unsigned long fref);
 extern int mx25_clocks_init(void);

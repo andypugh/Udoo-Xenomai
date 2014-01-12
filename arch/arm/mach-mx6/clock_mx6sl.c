@@ -4036,7 +4036,7 @@ int __init mx6sl_clocks_init(unsigned long ckil, unsigned long osc,
 	gpt_clk[0].parent = &ipg_perclk;
 	gpt_clk[0].get_rate = NULL;
 
-	mxc_timer_init(&gpt_clk[0], timer_base, MXC_INT_GPT);
+	mxc_timer_init(&gpt_clk[0], timer_base, GPT_BASE_ADDR, MXC_INT_GPT);
 
 	/* keep correct count. */
 	clk_enable(&cpu_clk);

@@ -25,6 +25,7 @@
 #include <linux/clockchips.h>
 #include <linux/hrtimer.h>
 #include <linux/tick.h>
+#include <linux/ipipe.h>
 #include <asm/io.h>
 #include <mach/hardware.h>
 #include <mach/clock.h>
@@ -249,17 +250,22 @@ void mxc_cpu_lp_set(enum mxc_cpu_pwr_mode mode)
 
 extern int tick_broadcast_oneshot_active(void);
 
+#ifndef CONFIG_IPIPE
 void ca9_do_idle(void)
 {
 	do {
 		cpu_do_idle();
 	} while (__raw_readl(gic_cpu_base_addr + GIC_CPU_HIGHPRI) == 1023);
 }
+#else /* CONFIG_IPIPE */
+#define ca9_do_idle() cpu_do_idle()
+#endif /* CONFIG_IPIPE */
 
 void arch_idle_single_core(void)
 {
 	u32 reg;
 
+	local_irq_disable_hw_cond();
 	if (cpu_is_mx6dl() && chip_rev > IMX_CHIP_REVISION_1_0) {
 		/*
 		  * MX6DLS TO1.1 has the HW fix for the WAIT mode issue.
@@ -349,6 +355,7 @@ void arch_idle_single_core(void)
 			__raw_writel(cur_arm_podf - 1, MXC_CCM_CACRR);
 		}
 	}
+	local_irq_enable_hw_cond();
 }
 
 void arch_idle_with_workaround(int cpu)

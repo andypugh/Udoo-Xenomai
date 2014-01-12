@@ -873,7 +873,9 @@ static int anatop_thermal_counting_ratio(unsigned int fuse_data)
 		pr_info("%s: invalid calibration data, disable cooling!!!\n", __func__);
 		cooling_device_disable = true;
 		ratio = DEFAULT_RATIO;
+#ifndef CONFIG_IPIPE
 		disable_irq(thermal_irq);
+#endif
 		return ret;
 	}
 
@@ -914,8 +916,12 @@ static irqreturn_t anatop_thermal_alarm_handler(int irq, void *dev_id)
 	char mode = 'r';
 	const char *cmd = "reboot";
 
-	if (cooling_device_disable)
+	if (cooling_device_disable) {
+#ifdef CONFIG_IPIPE
+		BUG();
+#endif
 		return IRQ_HANDLED;
+	}
 	printk(KERN_WARNING "\nChip is too hot, reboot!!!\n");
 	/* reboot */
 	arch_reset(mode, cmd);

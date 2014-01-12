@@ -61,12 +61,14 @@ ENTRY(mx6_secondary_startup)
 	/* Invalidate L1 D-cache */
 	bl      v7_invalidate_l1
 	/* Set ARM working mode */
-	msr     cpsr_fsxc, #0xd3
+	mov	r1, #0xd3
+	msr     cpsr_fsxc, r1
 
 	mrc p15, 0, r0, c0, c0, 5
 	and r0, r0, #15
 	ldr r1, = 0x020d8020
-	add r1, r0, LSL#3
+	lsl r0, #3
+	add r1, r0
 
 	/*Clear SRC_GPR register */
 	mov r0, #0

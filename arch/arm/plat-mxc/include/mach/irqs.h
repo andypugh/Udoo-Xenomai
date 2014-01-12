@@ -88,8 +88,11 @@ extern int imx_irq_set_priority(unsigned char irq, unsigned char prio);
 /* switch between IRQ and FIQ */
 extern int mxc_set_irq_fiq(unsigned int irq, unsigned int type);
 
-#ifdef CONFIG_MXC_TZIC
+#if defined(CONFIG_MXC_TZIC) || defined(CONFIG_ARM_GIC)
 #define __IPIPE_FEATURE_PIC_MUTE
-#endif /* CONFIG_MXC_TZIC */
+#endif /* CONFIG_MXC_TZIC || CONFIG_ARM_GIC */
 
+#if defined(CONFIG_SOC_IMX6Q) && defined(CONFIG_SMP)
+#include <asm/smp_twd.h>
+#endif /* CONFIG_ARCH_MX6 */
 #endif /* __ASM_ARCH_MXC_IRQS_H__ */

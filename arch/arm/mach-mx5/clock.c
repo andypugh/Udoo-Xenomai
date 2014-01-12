@@ -4879,7 +4879,7 @@ int __init mx51_clocks_init(unsigned long ckil, unsigned long osc, unsigned long
 
 	/* System timer */
 	mxc_timer_init(&gpt_clk[0], MX51_IO_ADDRESS(MX51_GPT1_BASE_ADDR),
-		MX51_MXC_INT_GPT);
+		       MX51_GPT1_BASE_ADDR, MX51_MXC_INT_GPT);
 
 	return 0;
 }
@@ -5133,7 +5133,7 @@ int __init mx53_clocks_init(unsigned long ckil, unsigned long osc, unsigned long
 
 	/* System timer */
 	mxc_timer_init(&gpt_clk[0], MX53_IO_ADDRESS(MX53_GPT1_BASE_ADDR),
-		MX53_INT_GPT);
+		       MX53_GPT1_BASE_ADDR, MX53_INT_GPT);
 	return 0;
 }
 

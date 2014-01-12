@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2013 Freescale Semiconductor, Inc. All Rights Reserved.
  */
@@ -5388,7 +5387,7 @@ int __init mx6_clocks_init(unsigned long ckil, unsigned long osc,
 		gpt_clk[0].secondary = NULL;
 	}
 
-	mxc_timer_init(&gpt_clk[0], timer_base, MXC_INT_GPT);
+	mxc_timer_init(&gpt_clk[0], timer_base, GPT_BASE_ADDR, MXC_INT_GPT);
 
 	clk_tree_init();
 

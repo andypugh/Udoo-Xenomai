@@ -16,6 +16,7 @@ deps_config := \
 	samples/Kconfig \
 	kernel/trace/Kconfig \
 	mm/Kconfig.debug \
+	kernel/ipipe/Kconfig.debug \
 	lib/Kconfig.debug \
 	arch/arm/Kconfig.debug \
 	fs/dlm/Kconfig \
@@ -600,6 +601,7 @@ deps_config := \
 	drivers/cpufreq/Kconfig \
 	mm/Kconfig \
 	kernel/Kconfig.preempt \
+	kernel/ipipe/Kconfig \
 	kernel/time/Kconfig \
 	drivers/pcmcia/Kconfig \
 	drivers/pci/pcie/aer/Kconfig.debug \
@@ -683,6 +685,28 @@ deps_config := \
 	arch/arm/mach-bcmring/Kconfig \
 	arch/arm/mach-at91/Kconfig \
 	kernel/Kconfig.freezer \
+	drivers/xenomai/ipc/Kconfig \
+	drivers/xenomai/analogy/sensoray/Kconfig \
+	drivers/xenomai/analogy/national_instruments/Kconfig \
+	drivers/xenomai/analogy/intel/Kconfig \
+	drivers/xenomai/analogy/testing/Kconfig \
+	drivers/xenomai/analogy/Kconfig \
+	drivers/xenomai/can/sja1000/Kconfig \
+	drivers/xenomai/can/mscan/Kconfig \
+	drivers/xenomai/can/Kconfig \
+	drivers/xenomai/testing/Kconfig \
+	drivers/xenomai/serial/Kconfig \
+	drivers/xenomai/Kconfig \
+	kernel/xenomai/skins/rtdm/Kconfig \
+	kernel/xenomai/skins/vxworks/Kconfig \
+	kernel/xenomai/skins/vrtx/Kconfig \
+	kernel/xenomai/skins/uitron/Kconfig \
+	kernel/xenomai/skins/psos+/Kconfig \
+	kernel/xenomai/skins/posix/Kconfig \
+	kernel/xenomai/skins/native/Kconfig \
+	kernel/xenomai/skins/Kconfig \
+	kernel/xenomai/nucleus/Kconfig \
+	arch/arm/xenomai/Kconfig \
 	kernel/Kconfig.locks \
 	block/Kconfig.iosched \
 	block/Kconfig \
