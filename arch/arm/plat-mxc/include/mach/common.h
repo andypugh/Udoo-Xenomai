@@ -99,4 +99,5 @@ extern int mx6q_seco_q7_init_pfuze100(u32 int_gpio);
 #ifdef CONFIG_IPIPE
 void ipipe_mach_allow_hwtimer_uaccess(unsigned long aips1, unsigned long aips2);
 #endif
+#endif
 

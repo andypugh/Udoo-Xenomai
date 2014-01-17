@@ -101,22 +101,16 @@ void mx6_cpu_regulator_init(void)
 
 			soc_regulator = regulator_get(NULL, soc_reg_id);
 			if (IS_ERR(soc_regulator))
-				printk(KERN_ERR "%s: failed to get soc regulator\n",
-					__func__);
+				printk(KERN_ERR "%s: failed to get soc regulator\n", __func__);
 			else
 				/* set soc to highest setpoint voltage. */
 				regulator_set_voltage(soc_regulator,
 					      cpu_op_tbl[0].soc_voltage,
 					      cpu_op_tbl[0].soc_voltage);
-
 			pu_regulator = regulator_get(NULL, pu_reg_id);
 			if (IS_ERR(pu_regulator))
 				printk(KERN_ERR "%s: failed to get pu regulator\n",
 					__func__);
-			
-			    #if defined(CONFIG_IPIPE) && defined(CONFIG_SMP)
-			    ipipe_twd_update_freq();
-			    #endif /* CONFIG_IPIPE && CONFIG_SMP */
 			else
 				/* set pu to higheset setpoint voltage. */
 				regulator_set_voltage(pu_regulator,
@@ -126,6 +120,11 @@ void mx6_cpu_regulator_init(void)
 			regulator_set_voltage(cpu_regulator,
 					      cpu_op_tbl[0].cpu_voltage,
 					      cpu_op_tbl[0].cpu_voltage);
+			
+            #if defined(CONFIG_IPIPE) && defined(CONFIG_SMP)
+			ipipe_twd_update_freq();
+            #endif /* CONFIG_IPIPE && CONFIG_SMP */
+
 			if (enable_ldo_mode == LDO_MODE_BYPASSED) {
 				/* digital bypass VDDPU/VDDSOC/VDDARM */
 				reg = __raw_readl(ANADIG_REG_CORE);

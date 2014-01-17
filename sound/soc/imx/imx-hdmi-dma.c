@@ -48,8 +48,6 @@
 #define HDMI_DMA_BURST_INCR8			2
 #define HDMI_DMA_BURST_INCR16			3
 
-
-
 #define HDMI_BASE_ADDR 0x00120000
 
 struct hdmi_sdma_script_data {
@@ -1251,6 +1249,8 @@ static int imx_pcm_preallocate_dma_buffer(struct snd_pcm *pcm, int stream)
 
 	/* The 'dma_buffer' is the buffer alsa knows about.
 	 * It contains only raw audio. */
+	
+/* Thos doesn't want to compile for Xenomai. I doubt that I want it...
 	buf->area = dma_alloc_writethrough(pcm->card->dev,
 					   HDMI_PCM_BUF_SIZE,
 					   &buf->addr, GFP_KERNEL);
@@ -1266,15 +1266,16 @@ static int imx_pcm_preallocate_dma_buffer(struct snd_pcm *pcm, int stream)
 	hdmi_dma_priv->tx_substream = substream;
 
 	/* For mmap access, isr will copy from
-	 * the dma_buffer to the hw_buffer */
+	 * the dma_buffer to the hw_buffer /
 	hw_buffer->area = dma_alloc_writethrough(pcm->card->dev,
 						HDMI_DMA_BUF_SIZE,
 						&hw_buffer->addr, GFP_KERNEL);
 	if (!hw_buffer->area)
+*/
 		return -ENOMEM;
 
 	hw_buffer->bytes = HDMI_DMA_BUF_SIZE;
-
+	
 	return 0;
 }
 
@@ -1344,8 +1345,9 @@ static int __devinit imx_soc_platform_probe(struct platform_device *pdev)
 	if (hdmi_dma_priv == NULL)
 		return -ENOMEM;
 
+/* Just don't bother with this for Xenomai. Lazy fix 
 	if (hdmi_SDMA_check()) {
-		/*To alloc a buffer non cacheable for hdmi script use*/
+		/*To alloc a buffer non cacheable for hdmi script use/
 		hdmi_dma_priv->hdmi_sdma_t =
 			dma_alloc_noncacheable(NULL,
 				sizeof(struct hdmi_sdma_script_data),
@@ -1354,6 +1356,7 @@ static int __devinit imx_soc_platform_probe(struct platform_device *pdev)
 		if (hdmi_dma_priv->hdmi_sdma_t == NULL)
 			return -ENOMEM;
 	}
+*/
 
 	hdmi_dma_priv->tx_active = false;
 	spin_lock_init(&hdmi_dma_priv->irq_lock);
