@@ -1,0 +1,16 @@
+***************
+*** 300,305 ****
+  	timer1_va_base = __io_address(REALVIEW_PB1176_TIMER0_1_BASE) + 0x20;
+  	timer2_va_base = __io_address(REALVIEW_PB1176_TIMER2_3_BASE);
+  	timer3_va_base = __io_address(REALVIEW_PB1176_TIMER2_3_BASE) + 0x20;
+  
+  	realview_timer_init(IRQ_DC1176_TIMER0);
+  }
+--- 300,306 ----
+  	timer1_va_base = __io_address(REALVIEW_PB1176_TIMER0_1_BASE) + 0x20;
+  	timer2_va_base = __io_address(REALVIEW_PB1176_TIMER2_3_BASE);
+  	timer3_va_base = __io_address(REALVIEW_PB1176_TIMER2_3_BASE) + 0x20;
++ 	timer3_pa_base = REALVIEW_PB1176_TIMER2_3_BASE + 0x20;
+  
+  	realview_timer_init(IRQ_DC1176_TIMER0);
+  }

@@ -1,0 +1,17 @@
+***************
+*** 171,176 ****
+  			return err;
+  	} while (pgd++, addr = next, addr != end);
+  
+  	return nr;
+  }
+  
+--- 171,178 ----
+  			return err;
+  	} while (pgd++, addr = next, addr != end);
+  
++  	__ipipe_pin_range_globally(start, end);
++  
+  	return nr;
+  }
+  

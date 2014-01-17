@@ -1,0 +1,17 @@
+***************
+*** 143,148 ****
+  	  - Enable verbose reporting from modpost to help solving
+  	    the section mismatches reported.
+  
+  config DEBUG_KERNEL
+  	bool "Kernel debugging"
+  	help
+--- 143,150 ----
+  	  - Enable verbose reporting from modpost to help solving
+  	    the section mismatches reported.
+  
++ source "kernel/ipipe/Kconfig.debug"
++ 
+  config DEBUG_KERNEL
+  	bool "Kernel debugging"
+  	help

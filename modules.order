@@ -1,0 +1,17 @@
+kernel/fs/nls/nls_ascii.ko
+kernel/fs/nls/nls_utf8.ko
+kernel/fs/exportfs/exportfs.ko
+kernel/fs/nfsd/nfsd.ko
+kernel/fs/cifs/cifs.ko
+kernel/fs/ntfs/ntfs.ko
+kernel/crypto/hmac.ko
+kernel/crypto/md4.ko
+kernel/crypto/md5.ko
+kernel/crypto/tcrypt.ko
+kernel/drivers/gpu/drm/drm.ko
+kernel/drivers/gpu/drm/vivante/vivante.ko
+kernel/drivers/scsi/scsi_wait_scan.ko
+kernel/drivers/net/wireless/ath/ath6kl/ath6kl.ko
+kernel/drivers/net/wireless/ath/ath.ko
+kernel/drivers/usb/serial/ftdi_sio.ko
+kernel/drivers/i2c/algos/i2c-algo-bit.ko

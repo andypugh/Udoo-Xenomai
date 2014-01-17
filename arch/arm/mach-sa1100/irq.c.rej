@@ -1,0 +1,68 @@
+***************
+*** 15,20 ****
+  #include <linux/irq.h>
+  #include <linux/ioport.h>
+  #include <linux/syscore_ops.h>
+  
+  #include <mach/hardware.h>
+  #include <asm/mach/irq.h>
+--- 15,21 ----
+  #include <linux/irq.h>
+  #include <linux/ioport.h>
+  #include <linux/syscore_ops.h>
++ #include <linux/ipipe.h>
+  
+  #include <mach/hardware.h>
+  #include <asm/mach/irq.h>
+***************
+*** 125,131 ****
+  		mask >>= 11;
+  		do {
+  			if (mask & 1)
+- 				generic_handle_irq(irq);
+  			mask >>= 1;
+  			irq++;
+  		} while (mask);
+--- 126,132 ----
+  		mask >>= 11;
+  		do {
+  			if (mask & 1)
++ 				ipipe_handle_chained_irq(irq);
+  			mask >>= 1;
+  			irq++;
+  		} while (mask);
+***************
+*** 217,222 ****
+  	.name		= "SC",
+  	.irq_ack	= sa1100_mask_irq,
+  	.irq_mask	= sa1100_mask_irq,
+  	.irq_unmask	= sa1100_unmask_irq,
+  	.irq_set_wake	= sa1100_set_wake,
+  };
+--- 218,226 ----
+  	.name		= "SC",
+  	.irq_ack	= sa1100_mask_irq,
+  	.irq_mask	= sa1100_mask_irq,
++ #ifdef CONFIG_IPIPE
++ 	.irq_mask_ack	= sa1100_mask_irq,
++ #endif /* CONFIG_IPIPE */
+  	.irq_unmask	= sa1100_unmask_irq,
+  	.irq_set_wake	= sa1100_set_wake,
+  };
+***************
+*** 255,261 ****
+  	 */
+  	GRER = PWER & GPIO_IRQ_rising_edge;
+  	GFER = PWER & GPIO_IRQ_falling_edge;
+- 	
+  	/*
+  	 * Clear any pending GPIO interrupts.
+  	 */
+--- 259,265 ----
+  	 */
+  	GRER = PWER & GPIO_IRQ_rising_edge;
+  	GFER = PWER & GPIO_IRQ_falling_edge;
++ 
+  	/*
+  	 * Clear any pending GPIO interrupts.
+  	 */

@@ -1,0 +1,6 @@
+kernel/fs/nls/nls_ascii.ko
+kernel/fs/nls/nls_utf8.ko
+kernel/fs/exportfs/exportfs.ko
+kernel/fs/nfsd/nfsd.ko
+kernel/fs/cifs/cifs.ko
+kernel/fs/ntfs/ntfs.ko

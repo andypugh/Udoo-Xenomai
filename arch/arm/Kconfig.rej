@@ -1,0 +1,77 @@
+***************
+*** 52,57 ****
+  config GENERIC_GPIO
+  	bool
+  
+  config ARCH_USES_GETTIMEOFFSET
+  	bool
+  	default n
+--- 52,60 ----
+  config GENERIC_GPIO
+  	bool
+  
++ config GENERIC_TIME_VSYSCALL
++ 	bool
++ 
+  config ARCH_USES_GETTIMEOFFSET
+  	bool
+  	default n
+***************
+*** 1031,1036 ****
+  	bool
+  	select CLKSRC_MMIO
+  
+  source arch/arm/mm/Kconfig
+  
+  config IWMMXT
+--- 1034,1047 ----
+  	bool
+  	select CLKSRC_MMIO
+  
++ if IPIPE
++ config IPIPE_ARM_KUSER_TSC
++        bool
++        select GENERIC_TIME_VSYSCALL
++        select HAVE_IPIPE_HOSTRT
++        default y if ARCH_AT91 || ARM_TIMER_SP804 || ARCH_MXC || ARCH_OMAP || PLAT_PXA || PLAT_S3C24XX || ARCH_SA1100
++ endif
++ 
+  source arch/arm/mm/Kconfig
+  
+  config IWMMXT
+***************
+*** 1430,1435 ****
+  	  accounting to be spread across the timer interval, preventing a
+  	  "thundering herd" at every timer tick.
+  
+  source kernel/Kconfig.preempt
+  
+  config HZ
+--- 1441,1448 ----
+  	  accounting to be spread across the timer interval, preventing a
+  	  "thundering herd" at every timer tick.
+  
++ source kernel/ipipe/Kconfig
++ 
+  source kernel/Kconfig.preempt
+  
+  config HZ
+***************
+*** 2024,2029 ****
+  	  Say Y to include support code for NEON, the ARMv7 Advanced SIMD
+  	  Extension.
+  
+  endmenu
+  
+  menu "Userspace binary formats"
+--- 2037,2046 ----
+  	  Say Y to include support code for NEON, the ARMv7 Advanced SIMD
+  	  Extension.
+  
++ config VFP_3_2_BACKPORT
++        bool
++        default y if VFP
++ 
+  endmenu
+  
+  menu "Userspace binary formats"

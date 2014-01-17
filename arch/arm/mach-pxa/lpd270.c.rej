@@ -1,0 +1,33 @@
+***************
+*** 24,29 ****
+  #include <linux/mtd/mtd.h>
+  #include <linux/mtd/partitions.h>
+  #include <linux/pwm_backlight.h>
+  
+  #include <asm/types.h>
+  #include <asm/setup.h>
+--- 24,30 ----
+  #include <linux/mtd/mtd.h>
+  #include <linux/mtd/partitions.h>
+  #include <linux/pwm_backlight.h>
++ #include <linux/ipipe.h>
+  
+  #include <asm/types.h>
+  #include <asm/setup.h>
+***************
+*** 130,136 ****
+  		desc->irq_data.chip->irq_ack(&desc->irq_data);
+  		if (likely(pending)) {
+  			irq = LPD270_IRQ(0) + __ffs(pending);
+- 			generic_handle_irq(irq);
+  
+  			pending = __raw_readw(LPD270_INT_STATUS) &
+  						lpd270_irq_enabled;
+--- 131,137 ----
+  		desc->irq_data.chip->irq_ack(&desc->irq_data);
+  		if (likely(pending)) {
+  			irq = LPD270_IRQ(0) + __ffs(pending);
++ 			ipipe_handle_chained_irq(irq);
+  
+  			pending = __raw_readw(LPD270_INT_STATUS) &
+  						lpd270_irq_enabled;

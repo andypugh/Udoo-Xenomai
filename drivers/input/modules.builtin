@@ -1,0 +1,14 @@
+kernel/drivers/input/input-core.ko
+kernel/drivers/input/input-polldev.ko
+kernel/drivers/input/mousedev.ko
+kernel/drivers/input/evdev.ko
+kernel/drivers/input/keyboard/atkbd.ko
+kernel/drivers/input/keyboard/gpio_keys.ko
+kernel/drivers/input/misc/uinput.ko
+kernel/drivers/input/misc/isl29023.ko
+kernel/drivers/input/touchscreen/usbtouchscreen.ko
+kernel/drivers/input/touchscreen/tsc2006.ko
+kernel/drivers/input/touchscreen/max11801_ts.ko
+kernel/drivers/input/touchscreen/egalax_ts.ko
+kernel/drivers/input/touchscreen/elan_ts.ko
+kernel/drivers/input/touchscreen/sitronix_i2c_touch.ko

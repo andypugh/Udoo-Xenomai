@@ -1,0 +1,1 @@
+cmd_drivers/xenomai/built-in.o :=  ld -EL    -r -o drivers/xenomai/built-in.o drivers/xenomai/serial/built-in.o drivers/xenomai/testing/built-in.o drivers/xenomai/can/built-in.o drivers/xenomai/analogy/built-in.o drivers/xenomai/ipc/built-in.o 

@@ -1,0 +1,69 @@
+***************
+*** 474,480 ****
+  
+  	cgroup_init_early();
+  
+- 	local_irq_disable();
+  	early_boot_irqs_disabled = true;
+  
+  /*
+--- 474,480 ----
+  
+  	cgroup_init_early();
+  
++ 	local_irq_disable_hw();
+  	early_boot_irqs_disabled = true;
+  
+  /*
+***************
+*** 509,514 ****
+  	pidhash_init();
+  	vfs_caches_init_early();
+  	sort_main_extable();
+  	trap_init();
+  	mm_init();
+  
+--- 509,515 ----
+  	pidhash_init();
+  	vfs_caches_init_early();
+  	sort_main_extable();
++ 	ipipe_init_early();
+  	trap_init();
+  	mm_init();
+  
+***************
+*** 541,546 ****
+  	softirq_init();
+  	timekeeping_init();
+  	time_init();
+  	profile_init();
+  	call_function_init();
+  	if (!irqs_disabled())
+--- 542,552 ----
+  	softirq_init();
+  	timekeeping_init();
+  	time_init();
++ 	/*
++ 	 * We need to wait for the interrupt and time subsystems to be
++ 	 * initialized before enabling the pipeline.
++ 	 */
++ 	ipipe_init();
+  	profile_init();
+  	call_function_init();
+  	if (!irqs_disabled())
+***************
+*** 715,720 ****
+  	init_tmpfs();
+  	driver_init();
+  	init_irq_proc();
+  	do_ctors();
+  	do_initcalls();
+  }
+--- 721,727 ----
+  	init_tmpfs();
+  	driver_init();
+  	init_irq_proc();
++   	ipipe_init_proc();
+  	do_ctors();
+  	do_initcalls();
+  }

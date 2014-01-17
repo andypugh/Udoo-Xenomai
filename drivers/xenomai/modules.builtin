@@ -1,0 +1,3 @@
+kernel/drivers/xenomai/ipc/xeno_rtipc.ko
+kernel/drivers/xenomai/testing/xeno_timerbench.ko
+kernel/drivers/xenomai/testing/xeno_switchtest.ko

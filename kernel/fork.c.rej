@@ -1,0 +1,51 @@
+***************
+*** 560,565 ****
+  		ksm_exit(mm);
+  		khugepaged_exit(mm); /* must run before exit_mmap */
+  		exit_mmap(mm);
+  		set_mm_exe_file(mm, NULL);
+  		if (!list_empty(&mm->mmlist)) {
+  			spin_lock(&mmlist_lock);
+--- 560,566 ----
+  		ksm_exit(mm);
+  		khugepaged_exit(mm); /* must run before exit_mmap */
+  		exit_mmap(mm);
++  		ipipe_cleanup_notify(mm);
+  		set_mm_exe_file(mm, NULL);
+  		if (!list_empty(&mm->mmlist)) {
+  			spin_lock(&mmlist_lock);
+***************
+*** 1006,1011 ****
+  	new_flags |= PF_FORKNOEXEC;
+  	new_flags |= PF_STARTING;
+  	p->flags = new_flags;
+  	clear_freeze_flag(p);
+  }
+  
+--- 1007,1013 ----
+  	new_flags |= PF_FORKNOEXEC;
+  	new_flags |= PF_STARTING;
+  	p->flags = new_flags;
++ 	ipipe_clear_flags(p);
+  	clear_freeze_flag(p);
+  }
+  
+***************
+*** 1372,1377 ****
+  	cgroup_post_fork(p);
+  	if (clone_flags & CLONE_THREAD)
+  		threadgroup_fork_read_unlock(current);
+  	perf_event_fork(p);
+  	return p;
+  
+--- 1374,1383 ----
+  	cgroup_post_fork(p);
+  	if (clone_flags & CLONE_THREAD)
+  		threadgroup_fork_read_unlock(current);
++ #ifdef CONFIG_IPIPE
++ 	p->ipipe_flags = 0;
++ 	memset(p->ptd, 0, sizeof(p->ptd));
++ #endif /* CONFIG_IPIPE */
+  	perf_event_fork(p);
+  	return p;
+  

@@ -1,0 +1,28 @@
+***************
+*** 104,109 ****
+  	.base = {
+  		.irq_ack = mxc_mask_irq,
+  		.irq_mask = mxc_mask_irq,
+  		.irq_unmask = mxc_unmask_irq,
+  	},
+  #ifdef CONFIG_MXC_IRQ_PRIOR
+--- 104,112 ----
+  	.base = {
+  		.irq_ack = mxc_mask_irq,
+  		.irq_mask = mxc_mask_irq,
++ #ifdef CONFIG_IPIPE
++ 		.irq_mask_ack = mxc_mask_irq,
++ #endif
+  		.irq_unmask = mxc_unmask_irq,
+  	},
+  #ifdef CONFIG_MXC_IRQ_PRIOR
+***************
+*** 155,158 ****
+  
+  	printk(KERN_INFO "MXC IRQ initialized\n");
+  }
+- 
+--- 158,160 ----
+  
+  	printk(KERN_INFO "MXC IRQ initialized\n");
+  }

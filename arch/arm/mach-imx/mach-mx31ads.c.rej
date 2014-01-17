@@ -1,0 +1,33 @@
+***************
+*** 21,26 ****
+  #include <linux/gpio.h>
+  #include <linux/i2c.h>
+  #include <linux/irq.h>
+  
+  #include <asm/mach-types.h>
+  #include <asm/mach/arch.h>
+--- 21,27 ----
+  #include <linux/gpio.h>
+  #include <linux/i2c.h>
+  #include <linux/irq.h>
++ #include <linux/ipipe.h>
+  
+  #include <asm/mach-types.h>
+  #include <asm/mach/arch.h>
+***************
+*** 137,143 ****
+  		if ((int_valid & 1) == 0)
+  			continue;
+  
+- 		generic_handle_irq(expio_irq);
+  	}
+  }
+  
+--- 138,144 ----
+  		if ((int_valid & 1) == 0)
+  			continue;
+  
++ 		ipipe_handle_chained_irq(expio_irq);
+  	}
+  }
+  

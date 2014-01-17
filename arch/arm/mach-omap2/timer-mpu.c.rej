@@ -1,0 +1,18 @@
+***************
+*** 34,39 ****
+  
+  	evt->irq = OMAP44XX_IRQ_LOCALTIMER;
+  	twd_timer_setup(evt);
+  	return 0;
+  }
+- 
+--- 34,42 ----
+  
+  	evt->irq = OMAP44XX_IRQ_LOCALTIMER;
+  	twd_timer_setup(evt);
++ #ifdef CONFIG_IPIPE
++ 	gt_setup(OMAP44XX_LOCAL_TWD_BASE - 0x400, 32);
++ #endif /* CONFIG_IPIPE */
++ 
+  	return 0;
+  }

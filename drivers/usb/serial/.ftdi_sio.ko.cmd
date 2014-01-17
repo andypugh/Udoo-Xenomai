@@ -1,0 +1,1 @@
+cmd_drivers/usb/serial/ftdi_sio.ko := ld -EL -r  -T /home/andypugh/git/Kernel_Unico/scripts/module-common.lds --build-id  -o drivers/usb/serial/ftdi_sio.ko drivers/usb/serial/ftdi_sio.o drivers/usb/serial/ftdi_sio.mod.o

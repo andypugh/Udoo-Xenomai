@@ -1,0 +1,11 @@
+--- arch/arm/mach-mx6/localtimer.c
++++ arch/arm/mach-mx6/localtimer.c
+@@ -33,5 +33,8 @@
+ {
+ 	evt->irq = IRQ_LOCALTIMER;
+ 	twd_timer_setup(evt);
++#ifdef CONFIG_IPIPE
++	gt_setup(LOCAL_TWD_ADDR - 0x400, 32);
++#endif /* CONFIG_IPIPE */
+ 	return 0;
+ }

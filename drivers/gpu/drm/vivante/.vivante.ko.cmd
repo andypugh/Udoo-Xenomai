@@ -1,0 +1,1 @@
+cmd_drivers/gpu/drm/vivante/vivante.ko := ld -EL -r  -T /home/andypugh/git/Kernel_Unico/scripts/module-common.lds --build-id  -o drivers/gpu/drm/vivante/vivante.ko drivers/gpu/drm/vivante/vivante.o drivers/gpu/drm/vivante/vivante.mod.o

@@ -1,0 +1,1 @@
+cmd_kernel/xenomai/skins/built-in.o :=  ld -EL    -r -o kernel/xenomai/skins/built-in.o kernel/xenomai/skins/native/built-in.o kernel/xenomai/skins/posix/built-in.o kernel/xenomai/skins/rtdm/built-in.o kernel/xenomai/skins/psos+/built-in.o kernel/xenomai/skins/vrtx/built-in.o kernel/xenomai/skins/vxworks/built-in.o kernel/xenomai/skins/uitron/built-in.o 

@@ -1,0 +1,4 @@
+kernel/crypto/hmac.ko
+kernel/crypto/md4.ko
+kernel/crypto/md5.ko
+kernel/crypto/tcrypt.ko

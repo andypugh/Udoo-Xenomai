@@ -1,0 +1,17 @@
+***************
+*** 67,73 ****
+  	void __iomem		*base;
+  	int			irq_base;
+  	int			group;
+- 	spinlock_t		 lock;
+  #ifdef CONFIG_PM
+  	u32			pm_save[4];
+  #endif
+--- 67,73 ----
+  	void __iomem		*base;
+  	int			irq_base;
+  	int			group;
++ 	ipipe_spinlock_t	lock;
+  #ifdef CONFIG_PM
+  	u32			pm_save[4];
+  #endif

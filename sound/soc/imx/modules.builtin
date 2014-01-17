@@ -1,0 +1,9 @@
+kernel/sound/soc/imx/snd-soc-imx.ko
+kernel/sound/soc/imx/snd-soc-imx-mx2.ko
+kernel/sound/soc/imx/snd-soc-imx-spdif-dai.ko
+kernel/sound/soc/imx/snd-soc-imx-ac97-vt1613.ko
+kernel/sound/soc/imx/snd-soc-imx-wm8962.ko
+kernel/sound/soc/imx/snd-soc-imx-sgtl5000.ko
+kernel/sound/soc/imx/snd-soc-imx-cs42888.ko
+kernel/sound/soc/imx/snd-soc-imx-spdif.ko
+kernel/sound/soc/imx/snd-soc-imx-hdmi.ko

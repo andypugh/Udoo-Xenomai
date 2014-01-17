@@ -1,0 +1,1 @@
+cmd_drivers/net/wireless/ath/ath.ko := ld -EL -r  -T /home/andypugh/git/Kernel_Unico/scripts/module-common.lds --build-id  -o drivers/net/wireless/ath/ath.ko drivers/net/wireless/ath/ath.o drivers/net/wireless/ath/ath.mod.o

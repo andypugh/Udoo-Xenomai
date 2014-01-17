@@ -1,0 +1,19 @@
+***************
+*** 86,93 ****
+  		if (err)
+  			break;
+  	} while (pgd++, addr = next, addr != end);
+- 
+- 	flush_cache_vmap(start, end);
+  
+  	return err;
+  }
+--- 86,93 ----
+  		if (err)
+  			break;
+  	} while (pgd++, addr = next, addr != end);
++ 	__ipipe_pin_range_globally(start, end);
++  	flush_cache_vmap(start, end);
+  
+  	return err;
+  }

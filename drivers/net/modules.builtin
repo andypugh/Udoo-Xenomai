@@ -1,0 +1,12 @@
+kernel/drivers/net/mii.ko
+kernel/drivers/net/smsc911x.ko
+kernel/drivers/net/can/vcan.ko
+kernel/drivers/net/can/can-dev.ko
+kernel/drivers/net/can/flexcan.ko
+kernel/drivers/net/phy/libphy.ko
+kernel/drivers/net/phy/micrel.ko
+kernel/drivers/net/wireless/hostap/hostap.ko
+kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko
+kernel/drivers/net/wireless/rt2x00/rt2x00usb.ko
+kernel/drivers/net/wireless/rt2x00/rt2800lib.ko
+kernel/drivers/net/wireless/rt2x00/rt2800usb.ko

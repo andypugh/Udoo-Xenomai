@@ -1,0 +1,59 @@
+***************
+*** 21,27 ****
+  	if (size == 8 && sizeof(unsigned long) != 8)
+  		wrong_size_cmpxchg(ptr);
+  
+- 	local_irq_save(flags);
+  	switch (size) {
+  	case 1: prev = *(u8 *)ptr;
+  		if (prev == old)
+--- 21,27 ----
+  	if (size == 8 && sizeof(unsigned long) != 8)
+  		wrong_size_cmpxchg(ptr);
+  
++ 	local_irq_save_hw(flags);
+  	switch (size) {
+  	case 1: prev = *(u8 *)ptr;
+  		if (prev == old)
+***************
+*** 42,48 ****
+  	default:
+  		wrong_size_cmpxchg(ptr);
+  	}
+- 	local_irq_restore(flags);
+  	return prev;
+  }
+  
+--- 42,48 ----
+  	default:
+  		wrong_size_cmpxchg(ptr);
+  	}
++ 	local_irq_restore_hw(flags);
+  	return prev;
+  }
+  
+***************
+*** 55,65 ****
+  	u64 prev;
+  	unsigned long flags;
+  
+- 	local_irq_save(flags);
+  	prev = *(u64 *)ptr;
+  	if (prev == old)
+  		*(u64 *)ptr = new;
+- 	local_irq_restore(flags);
+  	return prev;
+  }
+  
+--- 55,65 ----
+  	u64 prev;
+  	unsigned long flags;
+  
++ 	local_irq_save_hw(flags);
+  	prev = *(u64 *)ptr;
+  	if (prev == old)
+  		*(u64 *)ptr = new;
++ 	local_irq_restore_hw(flags);
+  	return prev;
+  }
+  

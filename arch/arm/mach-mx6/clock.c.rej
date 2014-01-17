@@ -1,0 +1,16 @@
+--- arch/arm/mach-mx6/clock.c
++++ arch/arm/mach-mx6/clock.c
+@@ -1,4 +1,3 @@
+-
+ /*
+  * Copyright (C) 2012 Freescale Semiconductor, Inc. All Rights Reserved.
+  */
+@@ -5358,7 +5357,7 @@
+ 		gpt_clk[0].secondary = NULL;
+ 	}
+ 
+-	mxc_timer_init(&gpt_clk[0], timer_base, MXC_INT_GPT);
++	mxc_timer_init(&gpt_clk[0], timer_base, GPT_BASE_ADDR, MXC_INT_GPT);
+ 
+ 	clk_tree_init();
+ 

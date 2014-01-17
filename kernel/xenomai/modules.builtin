@@ -1,0 +1,4 @@
+kernel/kernel/xenomai/nucleus/xeno_nucleus.ko
+kernel/kernel/xenomai/skins/native/xeno_native.ko
+kernel/kernel/xenomai/skins/posix/xeno_posix.ko
+kernel/kernel/xenomai/skins/rtdm/xeno_rtdm.ko

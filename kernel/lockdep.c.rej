@@ -1,0 +1,68 @@
+***************
+*** 2502,2508 ****
+  	/* we'll do an OFF -> ON transition: */
+  	curr->hardirqs_enabled = 1;
+  
+- 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled()))
+  		return;
+  	if (DEBUG_LOCKS_WARN_ON(current->hardirq_context))
+  		return;
+--- 2502,2508 ----
+  	/* we'll do an OFF -> ON transition: */
+  	curr->hardirqs_enabled = 1;
+  
++ 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled() && !irqs_disabled_hw()))
+  		return;
+  	if (DEBUG_LOCKS_WARN_ON(current->hardirq_context))
+  		return;
+***************
+*** 2545,2551 ****
+  	if (unlikely(!debug_locks || current->lockdep_recursion))
+  		return;
+  
+- 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled()))
+  		return;
+  
+  	if (curr->hardirqs_enabled) {
+--- 2545,2551 ----
+  	if (unlikely(!debug_locks || current->lockdep_recursion))
+  		return;
+  
++ 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled() && !irqs_disabled_hw()))
+  		return;
+  
+  	if (curr->hardirqs_enabled) {
+***************
+*** 2577,2583 ****
+  	if (unlikely(!debug_locks))
+  		return;
+  
+- 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled()))
+  		return;
+  
+  	if (curr->softirqs_enabled) {
+--- 2577,2583 ----
+  	if (unlikely(!debug_locks))
+  		return;
+  
++ 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled() && !irqs_disabled_hw()))
+  		return;
+  
+  	if (curr->softirqs_enabled) {
+***************
+*** 2611,2617 ****
+  	if (unlikely(!debug_locks))
+  		return;
+  
+- 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled()))
+  		return;
+  
+  	if (curr->softirqs_enabled) {
+--- 2611,2617 ----
+  	if (unlikely(!debug_locks))
+  		return;
+  
++ 	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled() && !irqs_disabled_hw()))
+  		return;
+  
+  	if (curr->softirqs_enabled) {

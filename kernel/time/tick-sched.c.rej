@@ -1,0 +1,34 @@
+***************
+*** 597,603 ****
+  		ts->idle_jiffies++;
+  	}
+  
+- 	update_process_times(user_mode(regs));
+  	profile_tick(CPU_PROFILING);
+  
+  	while (tick_nohz_reprogram(ts, now)) {
+--- 597,603 ----
+  		ts->idle_jiffies++;
+  	}
+  
++ 	update_root_process_times(regs);
+  	profile_tick(CPU_PROFILING);
+  
+  	while (tick_nohz_reprogram(ts, now)) {
+***************
+*** 756,762 ****
+  			touch_softlockup_watchdog();
+  			ts->idle_jiffies++;
+  		}
+- 		update_process_times(user_mode(regs));
+  		profile_tick(CPU_PROFILING);
+  	}
+  
+--- 756,762 ----
+  			touch_softlockup_watchdog();
+  			ts->idle_jiffies++;
+  		}
++ 		update_root_process_times(regs);
+  		profile_tick(CPU_PROFILING);
+  	}
+  

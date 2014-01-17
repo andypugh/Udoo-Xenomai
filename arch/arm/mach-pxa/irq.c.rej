@@ -1,0 +1,18 @@
+***************
+*** 86,91 ****
+  	.name		= "SC",
+  	.irq_ack	= pxa_mask_irq,
+  	.irq_mask	= pxa_mask_irq,
+  	.irq_unmask	= pxa_unmask_irq,
+  };
+  
+--- 86,94 ----
+  	.name		= "SC",
+  	.irq_ack	= pxa_mask_irq,
+  	.irq_mask	= pxa_mask_irq,
++ #ifdef CONFIG_IPIPE
++ 	.irq_mask_ack	= pxa_mask_irq,
++ #endif /* CONFIG_IPIPE */
+  	.irq_unmask	= pxa_unmask_irq,
+  };
+  

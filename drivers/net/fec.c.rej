@@ -1,0 +1,38 @@
+--- drivers/net/fec.c
++++ drivers/net/fec.c
+@@ -308,7 +316,7 @@
+ 	/* Fill in a Tx ring entry */
+ 	bdp = fep->cur_tx;
+ 
+-	status = bdp->cbd_sc;
++	status = bufdesc_read_status(bdp);
+ 
+ 	if (status & BD_ENET_TX_READY) {
+ 		/* Ooops.  All transmit buffers are full.  Bail out.
+@@ -447,7 +455,7 @@
+ 	spin_lock(&fep->hw_lock);
+ 	bdp = fep->dirty_tx;
+ 
+-	while (((status = bdp->cbd_sc) & BD_ENET_TX_READY) == 0) {
++	while (((status = bufdesc_read_status(bdp)) & BD_ENET_TX_READY) == 0) {
+ 		if (bdp == fep->cur_tx && fep->tx_full == 0)
+ 			break;
+ 
+@@ -550,7 +558,7 @@
+ 	 */
+ 	bdp = fep->cur_rx;
+ 
+-	while (!((status = bdp->cbd_sc) & BD_ENET_RX_EMPTY)) {
++	while (!((status = bufdesc_read_status(bdp)) & BD_ENET_RX_EMPTY)) {
+ 		if (pkt_received >= budget)
+ 			break;
+ 		pkt_received++;
+@@ -688,7 +696,7 @@
+ 	 */
+ 	bdp = fep->cur_rx;
+ 
+-	while (!((status = bdp->cbd_sc) & BD_ENET_RX_EMPTY)) {
++	while (!((status = bufdesc_read_status(bdp)) & BD_ENET_RX_EMPTY)) {
+ 
+ 		/* Since we have allocated space to hold a complete frame,
+ 		 * the last indicator should be set.

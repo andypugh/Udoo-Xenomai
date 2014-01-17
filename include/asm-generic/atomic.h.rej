@@ -1,0 +1,71 @@
+***************
+*** 58,68 ****
+  	unsigned long flags;
+  	int temp;
+  
+- 	raw_local_irq_save(flags); /* Don't trace it in an irqsoff handler */
+  	temp = v->counter;
+  	temp += i;
+  	v->counter = temp;
+- 	raw_local_irq_restore(flags);
+  
+  	return temp;
+  }
+--- 58,68 ----
+  	unsigned long flags;
+  	int temp;
+  
++ 	local_irq_save_hw(flags); /* Don't trace it in an irqsoff handler */
+  	temp = v->counter;
+  	temp += i;
+  	v->counter = temp;
++ 	local_irq_restore_hw(flags);
+  
+  	return temp;
+  }
+***************
+*** 79,89 ****
+  	unsigned long flags;
+  	int temp;
+  
+- 	raw_local_irq_save(flags); /* Don't trace it in an irqsoff handler */
+  	temp = v->counter;
+  	temp -= i;
+  	v->counter = temp;
+- 	raw_local_irq_restore(flags);
+  
+  	return temp;
+  }
+--- 79,89 ----
+  	unsigned long flags;
+  	int temp;
+  
++ 	local_irq_save_hw(flags);
+  	temp = v->counter;
+  	temp -= i;
+  	v->counter = temp;
++ 	local_irq_restore_hw(flags);
+  
+  	return temp;
+  }
+***************
+*** 145,153 ****
+  	unsigned long flags;
+  
+  	mask = ~mask;
+- 	raw_local_irq_save(flags); /* Don't trace it in a irqsoff handler */
+  	*addr &= mask;
+- 	raw_local_irq_restore(flags);
+  }
+  
+  /* Assume that atomic operations are already serializing */
+--- 145,153 ----
+  	unsigned long flags;
+  
+  	mask = ~mask;
++ 	local_irq_save_hw(flags);
+  	*addr &= mask;
++ 	local_irq_restore_hw(flags);
+  }
+  
+  /* Assume that atomic operations are already serializing */

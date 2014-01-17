@@ -1,0 +1,26 @@
+--- drivers/mxc/thermal/thermal.c
++++ drivers/mxc/thermal/thermal.c
+@@ -834,7 +834,9 @@
+ 		pr_info("%s: invalid calibration data, disable cooling!!!\n", __func__);
+ 		cooling_device_disable = true;
+ 		ratio = DEFAULT_RATIO;
++#ifndef CONFIG_IPIPE
+ 		disable_irq(thermal_irq);
++#endif
+ 		return ret;
+ 	}
+ 
+@@ -863,8 +865,12 @@
+ 	char mode = 'r';
+ 	const char *cmd = "reboot";
+ 
+-	if (cooling_device_disable)
++	if (cooling_device_disable) {
++#ifdef CONFIG_IPIPE
++		BUG();
++#endif
+ 		return IRQ_HANDLED;
++	}
+ 	printk(KERN_WARNING "\nChip is too hot, reboot!!!\n");
+ 	/* reboot */
+ 	arch_reset(mode, cmd);

@@ -1,0 +1,1 @@
+cmd_arch/arm/boot/uImage := /bin/bash /home/andypugh/git/Kernel_Unico/scripts/mkuboot.sh -A arm -O linux -T kernel -C none -a 0x10008000 -e 0x10008000 -n 'Linux-3.0.35-Xenomai-g24072e2-dirty' -d arch/arm/boot/zImage arch/arm/boot/uImage

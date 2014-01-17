@@ -1,0 +1,16 @@
+***************
+*** 12,17 ****
+   */
+  
+  #include <linux/init.h>
+  
+  #include <mach/hardware.h>
+  #include <asm/leds.h>
+--- 12,18 ----
+   */
+  
+  #include <linux/init.h>
++ #include <linux/ipipe_base.h>
+  
+  #include <mach/hardware.h>
+  #include <asm/leds.h>

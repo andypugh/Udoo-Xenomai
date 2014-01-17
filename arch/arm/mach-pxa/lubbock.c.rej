@@ -1,0 +1,33 @@
+***************
+*** 22,27 ****
+  #include <linux/mtd/mtd.h>
+  #include <linux/mtd/partitions.h>
+  #include <linux/smc91x.h>
+  
+  #include <linux/spi/spi.h>
+  #include <linux/spi/ads7846.h>
+--- 22,28 ----
+  #include <linux/mtd/mtd.h>
+  #include <linux/mtd/partitions.h>
+  #include <linux/smc91x.h>
++ #include <linux/ipipe.h>
+  
+  #include <linux/spi/spi.h>
+  #include <linux/spi/ads7846.h>
+***************
+*** 151,157 ****
+  		desc->irq_data.chip->irq_ack(&desc->irq_data);
+  		if (likely(pending)) {
+  			irq = LUBBOCK_IRQ(0) + __ffs(pending);
+- 			generic_handle_irq(irq);
+  		}
+  		pending = LUB_IRQ_SET_CLR & lubbock_irq_enabled;
+  	} while (pending);
+--- 152,158 ----
+  		desc->irq_data.chip->irq_ack(&desc->irq_data);
+  		if (likely(pending)) {
+  			irq = LUBBOCK_IRQ(0) + __ffs(pending);
++ 			ipipe_handle_chained_irq(irq);
+  		}
+  		pending = LUB_IRQ_SET_CLR & lubbock_irq_enabled;
+  	} while (pending);

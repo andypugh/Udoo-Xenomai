@@ -1,0 +1,12 @@
+--- arch/arm/mach-mx6/cpu_regulator-mx6.c
++++ arch/arm/mach-mx6/cpu_regulator-mx6.c
+@@ -108,5 +108,9 @@
+ 	pu_regulator = regulator_get(NULL, pu_reg_id);
+ 	if (IS_ERR(pu_regulator))
+ 		printk(KERN_ERR "%s: failed to get pu regulator\n", __func__);
++
++#if defined(CONFIG_IPIPE) && defined(CONFIG_SMP)
++	ipipe_twd_update_freq();
++#endif /* CONFIG_IPIPE && CONFIG_SMP */
+ }
+ 

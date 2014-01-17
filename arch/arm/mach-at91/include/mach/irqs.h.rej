@@ -1,0 +1,13 @@
+***************
+*** 45,48 ****
+  /* FIQ is AIC source 0. */
+  #define FIQ_START AT91_ID_FIQ
+  
+  #endif
+--- 45,50 ----
+  /* FIQ is AIC source 0. */
+  #define FIQ_START AT91_ID_FIQ
+  
++ #define __IPIPE_FEATURE_PIC_MUTE
++ 
+  #endif

@@ -1,0 +1,16 @@
+***************
+*** 636,641 ****
+  	unsigned int mask;
+  
+  	set_tsk_thread_flag(t, TIF_SIGPENDING);
+  
+  	/*
+  	 * For SIGKILL, we want to wake it up in the stopped/traced/killable
+--- 636,642 ----
+  	unsigned int mask;
+  
+  	set_tsk_thread_flag(t, TIF_SIGPENDING);
++ 	ipipe_sigwake_notify(t); /* TIF_SIGPENDING must be set first. */
+  
+  	/*
+  	 * For SIGKILL, we want to wake it up in the stopped/traced/killable

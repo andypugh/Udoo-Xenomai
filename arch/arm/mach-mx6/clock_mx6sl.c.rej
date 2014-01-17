@@ -1,0 +1,11 @@
+--- arch/arm/mach-mx6/clock_mx6sl.c
++++ arch/arm/mach-mx6/clock_mx6sl.c
+@@ -4035,7 +4035,7 @@
+ 	gpt_clk[0].parent = &ipg_perclk;
+ 	gpt_clk[0].get_rate = NULL;
+ 
+-	mxc_timer_init(&gpt_clk[0], timer_base, MXC_INT_GPT);
++	mxc_timer_init(&gpt_clk[0], timer_base, GPT_BASE_ADDR, MXC_INT_GPT);
+ 
+ 	/* keep correct count. */
+ 	clk_enable(&cpu_clk);

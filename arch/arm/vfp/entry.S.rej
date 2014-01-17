@@ -1,0 +1,48 @@
+***************
+*** 25,31 ****
+  	add	r11, r4, #1		@ increment it
+  	str	r11, [r10, #TI_PREEMPT]
+  #endif
+- 	enable_irq
+   	ldr	r4, .LCvfp
+  	ldr	r11, [r10, #TI_CPU]	@ CPU number
+  	add	r10, r10, #TI_VFPSTATE	@ r10 = workspace
+--- 25,30 ----
+  	add	r11, r4, #1		@ increment it
+  	str	r11, [r10, #TI_PREEMPT]
+  #endif
+   	ldr	r4, .LCvfp
+  	ldr	r11, [r10, #TI_CPU]	@ CPU number
+  	add	r10, r10, #TI_VFPSTATE	@ r10 = workspace
+***************
+*** 33,38 ****
+  ENDPROC(do_vfp)
+  
+  ENTRY(vfp_null_entry)
+  #ifdef CONFIG_PREEMPT
+  	get_thread_info	r10
+  	ldr	r4, [r10, #TI_PREEMPT]	@ get preempt count
+--- 32,38 ----
+  ENDPROC(do_vfp)
+  
+  ENTRY(vfp_null_entry)
++ 	enable_irq
+  #ifdef CONFIG_PREEMPT
+  	get_thread_info	r10
+  	ldr	r4, [r10, #TI_PREEMPT]	@ get preempt count
+***************
+*** 51,56 ****
+  
+  	__INIT
+  ENTRY(vfp_testing_entry)
+  #ifdef CONFIG_PREEMPT
+  	get_thread_info	r10
+  	ldr	r4, [r10, #TI_PREEMPT]	@ get preempt count
+--- 51,57 ----
+  
+  	__INIT
+  ENTRY(vfp_testing_entry)
++ 	enable_irq
+  #ifdef CONFIG_PREEMPT
+  	get_thread_info	r10
+  	ldr	r4, [r10, #TI_PREEMPT]	@ get preempt count

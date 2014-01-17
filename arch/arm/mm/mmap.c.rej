@@ -1,0 +1,129 @@
+***************
+*** 31,37 ****
+  {
+  	struct mm_struct *mm = current->mm;
+  	struct vm_area_struct *vma;
+- 	unsigned long start_addr;
+  #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_V6K)
+  	unsigned int cache_type;
+  	int do_align = 0, aliasing = 0;
+--- 31,37 ----
+  {
+  	struct mm_struct *mm = current->mm;
+  	struct vm_area_struct *vma;
++ 	unsigned long start_addr = addr;
+  #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_V6K)
+  	unsigned int cache_type;
+  	int do_align = 0, aliasing = 0;
+***************
+*** 52,57 ****
+  #define aliasing 0
+  #endif
+  
+  	/*
+  	 * We enforce the MAP_FIXED case.
+  	 */
+--- 52,60 ----
+  #define aliasing 0
+  #endif
+  
++ #ifdef CONFIG_ARM_FCSE
++ 	start_addr = addr;
++ #endif /* CONFIG_ARM_FCSE */
+  	/*
+  	 * We enforce the MAP_FIXED case.
+  	 */
+***************
+*** 59,65 ****
+  		if (aliasing && flags & MAP_SHARED &&
+  		    (addr - (pgoff << PAGE_SHIFT)) & (SHMLBA - 1))
+  			return -EINVAL;
+- 		return addr;
+  	}
+  
+  	if (len > TASK_SIZE)
+--- 62,68 ----
+  		if (aliasing && flags & MAP_SHARED &&
+  		    (addr - (pgoff << PAGE_SHIFT)) & (SHMLBA - 1))
+  			return -EINVAL;
++ 		goto found_addr;
+  	}
+  
+  	if (len > TASK_SIZE)
+***************
+*** 74,86 ****
+  		vma = find_vma(mm, addr);
+  		if (TASK_SIZE - len >= addr &&
+  		    (!vma || addr + len <= vma->vm_start))
+- 			return addr;
+  	}
+  	if (len > mm->cached_hole_size) {
+- 	        start_addr = addr = mm->free_area_cache;
+  	} else {
+- 	        start_addr = addr = TASK_UNMAPPED_BASE;
+- 	        mm->cached_hole_size = 0;
+  	}
+  	/* 8 bits of randomness in 20 address space bits */
+  	if ((current->flags & PF_RANDOMIZE) &&
+--- 77,89 ----
+  		vma = find_vma(mm, addr);
+  		if (TASK_SIZE - len >= addr &&
+  		    (!vma || addr + len <= vma->vm_start))
++ 			goto found_addr;
+  	}
+  	if (len > mm->cached_hole_size) {
++ 		start_addr = addr = mm->free_area_cache;
+  	} else {
++ 		start_addr = addr = TASK_UNMAPPED_BASE;
++ 		mm->cached_hole_size = 0;
+  	}
+  	/* 8 bits of randomness in 20 address space bits */
+  	if ((current->flags & PF_RANDOMIZE) &&
+***************
+*** 112,125 ****
+  			 * Remember the place where we stopped the search:
+  			 */
+  			mm->free_area_cache = addr + len;
+- 			return addr;
+  		}
+  		if (addr + mm->cached_hole_size < vma->vm_start)
+- 		        mm->cached_hole_size = vma->vm_start - addr;
+  		addr = vma->vm_end;
+  		if (do_align)
+  			addr = COLOUR_ALIGN(addr, pgoff);
+  	}
+  }
+  
+  
+--- 115,145 ----
+  			 * Remember the place where we stopped the search:
+  			 */
+  			mm->free_area_cache = addr + len;
++ 			goto found_addr;
+  		}
+  		if (addr + mm->cached_hole_size < vma->vm_start)
++ 			mm->cached_hole_size = vma->vm_start - addr;
+  		addr = vma->vm_end;
+  		if (do_align)
+  			addr = COLOUR_ALIGN(addr, pgoff);
+  	}
++ 
++   found_addr:
++ #ifdef CONFIG_ARM_FCSE
++ 	{
++ 		unsigned long new_addr = fcse_check_mmap_addr(mm, start_addr,
++ 							      addr, len, flags);
++ 		if (new_addr != addr) {
++ 			addr = new_addr;
++ 			if (!(addr & ~PAGE_MASK)) {
++ 				start_addr = TASK_UNMAPPED_BASE;
++ 				mm->cached_hole_size = 0;
++ 				goto full_search;
++ 			}
++ 		}
++ 	}
++ #endif /* CONFIG_ARM_FCSE */
++ 	return addr;
+  }
+  
+  

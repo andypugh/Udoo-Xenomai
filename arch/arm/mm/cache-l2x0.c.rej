@@ -1,0 +1,89 @@
+***************
+*** 19,32 ****
+  #include <linux/init.h>
+  #include <linux/spinlock.h>
+  #include <linux/io.h>
+  
+  #include <asm/cacheflush.h>
+  #include <asm/hardware/cache-l2x0.h>
+  
+  #define CACHE_LINE_SIZE		32
+  
+  static void __iomem *l2x0_base;
+- static DEFINE_SPINLOCK(l2x0_lock);
+  static uint32_t l2x0_way_mask;	/* Bitmask of active ways */
+  static uint32_t l2x0_size;
+  
+--- 19,39 ----
+  #include <linux/init.h>
+  #include <linux/spinlock.h>
+  #include <linux/io.h>
++ #include <linux/ipipe.h>
+  
+  #include <asm/cacheflush.h>
+  #include <asm/hardware/cache-l2x0.h>
+  
+  #define CACHE_LINE_SIZE		32
+  
++ #ifndef CONFIG_IPIPE
++ #define L2X0_SPINLOCK_LEN	4096UL
++ #else
++ #define L2X0_SPINLOCK_LEN	512UL
++ #endif
++ 
+  static void __iomem *l2x0_base;
++ static IPIPE_DEFINE_SPINLOCK(l2x0_lock);
+  static uint32_t l2x0_way_mask;	/* Bitmask of active ways */
+  static uint32_t l2x0_size;
+  
+***************
+*** 187,193 ****
+  	}
+  
+  	while (start < end) {
+- 		unsigned long blk_end = start + min(end - start, 4096UL);
+  
+  		while (start < blk_end) {
+  			l2x0_inv_line(start);
+--- 194,200 ----
+  	}
+  
+  	while (start < end) {
++ 		unsigned long blk_end = start + min(end - start, L2X0_SPINLOCK_LEN);
+  
+  		while (start < blk_end) {
+  			l2x0_inv_line(start);
+***************
+*** 217,223 ****
+  	spin_lock_irqsave(&l2x0_lock, flags);
+  	start &= ~(CACHE_LINE_SIZE - 1);
+  	while (start < end) {
+- 		unsigned long blk_end = start + min(end - start, 4096UL);
+  
+  		while (start < blk_end) {
+  			l2x0_clean_line(start);
+--- 224,230 ----
+  	spin_lock_irqsave(&l2x0_lock, flags);
+  	start &= ~(CACHE_LINE_SIZE - 1);
+  	while (start < end) {
++ 		unsigned long blk_end = start + min(end - start, L2X0_SPINLOCK_LEN);
+  
+  		while (start < blk_end) {
+  			l2x0_clean_line(start);
+***************
+*** 247,253 ****
+  	spin_lock_irqsave(&l2x0_lock, flags);
+  	start &= ~(CACHE_LINE_SIZE - 1);
+  	while (start < end) {
+- 		unsigned long blk_end = start + min(end - start, 4096UL);
+  
+  		debug_writel(0x03);
+  		while (start < blk_end) {
+--- 254,260 ----
+  	spin_lock_irqsave(&l2x0_lock, flags);
+  	start &= ~(CACHE_LINE_SIZE - 1);
+  	while (start < end) {
++ 		unsigned long blk_end = start + min(end - start, L2X0_SPINLOCK_LEN);
+  
+  		debug_writel(0x03);
+  		while (start < blk_end) {

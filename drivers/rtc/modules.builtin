@@ -1,0 +1,2 @@
+kernel/drivers/rtc/rtc-pcf2123.ko
+kernel/drivers/rtc/rtc-snvs.ko

@@ -1,0 +1,33 @@
+***************
+*** 118,124 ****
+  			 unsigned long uaddr, void *kaddr, unsigned long len)
+  {
+  	if (cache_is_vivt()) {
+- 		if (cpumask_test_cpu(smp_processor_id(), mm_cpumask(vma->vm_mm))) {
+  			unsigned long addr = (unsigned long)kaddr;
+  			__cpuc_coherent_kern_range(addr, addr + len);
+  		}
+--- 118,124 ----
+  			 unsigned long uaddr, void *kaddr, unsigned long len)
+  {
+  	if (cache_is_vivt()) {
++ 		if (fcse_mm_in_cache(vma->vm_mm)) {
+  			unsigned long addr = (unsigned long)kaddr;
+  			__cpuc_coherent_kern_range(addr, addr + len);
+  		}
+***************
+*** 158,163 ****
+  #ifdef CONFIG_SMP
+  	preempt_disable();
+  #endif
+  	memcpy(dst, src, len);
+  	flush_ptrace_access(vma, page, uaddr, dst, len);
+  #ifdef CONFIG_SMP
+--- 158,164 ----
+  #ifdef CONFIG_SMP
+  	preempt_disable();
+  #endif
++ 	fcse_flush_cache_user_range(vma, uaddr, uaddr + len);
+  	memcpy(dst, src, len);
+  	flush_ptrace_access(vma, page, uaddr, dst, len);
+  #ifdef CONFIG_SMP

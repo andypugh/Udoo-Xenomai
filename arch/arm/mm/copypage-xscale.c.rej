@@ -1,0 +1,17 @@
+***************
+*** 42,48 ****
+   * Dcache aliasing issue.  The writes will be forwarded to the write buffer,
+   * and merged as appropriate.
+   */
+- static void __naked
+  mc_copy_user_page(void *from, void *to)
+  {
+  	/*
+--- 42,48 ----
+   * Dcache aliasing issue.  The writes will be forwarded to the write buffer,
+   * and merged as appropriate.
+   */
++ static void notrace __naked
+  mc_copy_user_page(void *from, void *to)
+  {
+  	/*

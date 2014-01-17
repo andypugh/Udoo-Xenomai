@@ -1,0 +1,52 @@
+***************
+*** 45,50 ****
+  #include <linux/mtd/partitions.h>
+  #include <linux/mtd/physmap.h>
+  #include <linux/syscore_ops.h>
+  
+  #include <mach/pxa25x.h>
+  #include <mach/audio.h>
+--- 45,51 ----
+  #include <linux/mtd/partitions.h>
+  #include <linux/mtd/physmap.h>
+  #include <linux/syscore_ops.h>
++ #include <linux/ipipe.h>
+  
+  #include <mach/pxa25x.h>
+  #include <mach/audio.h>
+***************
+*** 287,293 ****
+  
+  		if (likely(pending)) {
+  			irq = viper_bit_to_irq(__ffs(pending));
+- 			generic_handle_irq(irq);
+  		}
+  		pending = viper_irq_pending();
+  	} while (pending);
+--- 288,294 ----
+  
+  		if (likely(pending)) {
+  			irq = viper_bit_to_irq(__ffs(pending));
++ 			ipipe_handle_chained_irq(irq);
+  		}
+  		pending = viper_irq_pending();
+  	} while (pending);
+***************
+*** 623,630 ****
+  static struct platform_device isp116x_device = {
+  	.name			= "isp116x-hcd",
+  	.id			= -1,
+- 	.num_resources  	= ARRAY_SIZE(isp116x_resources),
+- 	.resource       	= isp116x_resources,
+  	.dev			= {
+  		.platform_data	= &isp116x_platform_data,
+  	},
+--- 624,631 ----
+  static struct platform_device isp116x_device = {
+  	.name			= "isp116x-hcd",
+  	.id			= -1,
++ 	.num_resources		= ARRAY_SIZE(isp116x_resources),
++ 	.resource		= isp116x_resources,
+  	.dev			= {
+  		.platform_data	= &isp116x_platform_data,
+  	},

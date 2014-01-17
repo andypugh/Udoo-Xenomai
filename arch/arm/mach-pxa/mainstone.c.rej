@@ -1,0 +1,50 @@
+***************
+*** 28,33 ****
+  #include <linux/pwm_backlight.h>
+  #include <linux/smc91x.h>
+  #include <linux/i2c/pxa-i2c.h>
+  
+  #include <asm/types.h>
+  #include <asm/setup.h>
+--- 28,34 ----
+  #include <linux/pwm_backlight.h>
+  #include <linux/smc91x.h>
+  #include <linux/i2c/pxa-i2c.h>
++ #include <linux/ipipe.h>
+  
+  #include <asm/types.h>
+  #include <asm/setup.h>
+***************
+*** 152,158 ****
+  		desc->irq_data.chip->irq_ack(&desc->irq_data);
+  		if (likely(pending)) {
+  			irq = MAINSTONE_IRQ(0) + __ffs(pending);
+- 			generic_handle_irq(irq);
+  		}
+  		pending = MST_INTSETCLR & mainstone_irq_enabled;
+  	} while (pending);
+--- 153,159 ----
+  		desc->irq_data.chip->irq_ack(&desc->irq_data);
+  		if (likely(pending)) {
+  			irq = MAINSTONE_IRQ(0) + __ffs(pending);
++ 			ipipe_handle_chained_irq(irq);
+  		}
+  		pending = MST_INTSETCLR & mainstone_irq_enabled;
+  	} while (pending);
+***************
+*** 386,392 ****
+  };
+  
+  static struct pxafb_mach_info mainstone_pxafb_info = {
+- 	.num_modes      	= 1,
+  	.lcd_conn		= LCD_COLOR_TFT_16BPP | LCD_PCLK_EDGE_FALL,
+  };
+  
+--- 387,393 ----
+  };
+  
+  static struct pxafb_mach_info mainstone_pxafb_info = {
++ 	.num_modes		= 1,
+  	.lcd_conn		= LCD_COLOR_TFT_16BPP | LCD_PCLK_EDGE_FALL,
+  };
+  

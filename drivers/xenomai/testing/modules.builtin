@@ -1,0 +1,2 @@
+kernel/drivers/xenomai/testing/xeno_timerbench.ko
+kernel/drivers/xenomai/testing/xeno_switchtest.ko

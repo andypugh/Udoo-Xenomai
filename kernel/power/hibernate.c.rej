@@ -1,0 +1,48 @@
+***************
+*** 277,282 ****
+  		goto Enable_cpus;
+  
+  	local_irq_disable();
+  
+  	error = syscore_suspend();
+  	if (error) {
+--- 277,283 ----
+  		goto Enable_cpus;
+  
+  	local_irq_disable();
++ 	local_irq_disable_hw_cond();
+  
+  	error = syscore_suspend();
+  	if (error) {
+***************
+*** 414,419 ****
+  		goto Enable_cpus;
+  
+  	local_irq_disable();
+  
+  	error = syscore_suspend();
+  	if (error)
+--- 415,421 ----
+  		goto Enable_cpus;
+  
+  	local_irq_disable();
++ 	local_irq_disable_hw_cond();
+  
+  	error = syscore_suspend();
+  	if (error)
+***************
+*** 529,534 ****
+  		goto Platform_finish;
+  
+  	local_irq_disable();
+  	syscore_suspend();
+  	if (pm_wakeup_pending()) {
+  		error = -EAGAIN;
+--- 531,537 ----
+  		goto Platform_finish;
+  
+  	local_irq_disable();
++ 	local_irq_disable_hw_cond();
+  	syscore_suspend();
+  	if (pm_wakeup_pending()) {
+  		error = -EAGAIN;

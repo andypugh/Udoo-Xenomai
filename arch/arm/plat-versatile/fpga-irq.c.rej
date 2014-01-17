@@ -1,0 +1,51 @@
+***************
+*** 3,8 ****
+   */
+  #include <linux/irq.h>
+  #include <linux/io.h>
+  
+  #include <asm/mach/irq.h>
+  #include <plat/fpga-irq.h>
+--- 3,9 ----
+   */
+  #include <linux/irq.h>
+  #include <linux/io.h>
++ #include <linux/ipipe.h>
+  
+  #include <asm/mach/irq.h>
+  #include <plat/fpga-irq.h>
+***************
+*** 42,48 ****
+  		irq = ffs(status) - 1;
+  		status &= ~(1 << irq);
+  
+- 		generic_handle_irq(irq + f->irq_start);
+  	} while (status);
+  }
+  
+--- 43,49 ----
+  		irq = ffs(status) - 1;
+  		status &= ~(1 << irq);
+  
++ 		ipipe_handle_chained_irq(irq + f->irq_start);
+  	} while (status);
+  }
+  
+***************
+*** 52,57 ****
+  
+  	f->chip.irq_ack = fpga_irq_mask;
+  	f->chip.irq_mask = fpga_irq_mask;
+  	f->chip.irq_unmask = fpga_irq_unmask;
+  
+  	if (parent_irq != -1) {
+--- 53,61 ----
+  
+  	f->chip.irq_ack = fpga_irq_mask;
+  	f->chip.irq_mask = fpga_irq_mask;
++ #ifdef CONFIG_IPIPE
++ 	f->chip.irq_mask_ack = fpga_irq_mask;
++ #endif
+  	f->chip.irq_unmask = fpga_irq_unmask;
+  
+  	if (parent_irq != -1) {

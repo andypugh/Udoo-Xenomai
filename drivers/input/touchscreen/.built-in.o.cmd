@@ -1,0 +1,1 @@
+cmd_drivers/input/touchscreen/built-in.o :=  ld -EL    -r -o drivers/input/touchscreen/built-in.o drivers/input/touchscreen/usbtouchscreen.o drivers/input/touchscreen/tsc2006.o drivers/input/touchscreen/max11801_ts.o drivers/input/touchscreen/egalax_ts.o drivers/input/touchscreen/elan_ts.o drivers/input/touchscreen/sitronix_i2c_touch.o 

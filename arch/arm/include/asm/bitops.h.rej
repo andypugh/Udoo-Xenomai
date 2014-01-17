@@ -1,0 +1,132 @@
+***************
+*** 41,49 ****
+  
+  	p += bit >> 5;
+  
+- 	raw_local_irq_save(flags);
+  	*p |= mask;
+- 	raw_local_irq_restore(flags);
+  }
+  
+  static inline void ____atomic_clear_bit(unsigned int bit, volatile unsigned long *p)
+--- 41,49 ----
+  
+  	p += bit >> 5;
+  
++ 	local_irq_save_hw(flags);
+  	*p |= mask;
++ 	local_irq_restore_hw(flags);
+  }
+  
+  static inline void ____atomic_clear_bit(unsigned int bit, volatile unsigned long *p)
+***************
+*** 53,61 ****
+  
+  	p += bit >> 5;
+  
+- 	raw_local_irq_save(flags);
+  	*p &= ~mask;
+- 	raw_local_irq_restore(flags);
+  }
+  
+  static inline void ____atomic_change_bit(unsigned int bit, volatile unsigned long *p)
+--- 53,61 ----
+  
+  	p += bit >> 5;
+  
++ 	local_irq_save_hw(flags);
+  	*p &= ~mask;
++ 	local_irq_restore_hw(flags);
+  }
+  
+  static inline void ____atomic_change_bit(unsigned int bit, volatile unsigned long *p)
+***************
+*** 65,73 ****
+  
+  	p += bit >> 5;
+  
+- 	raw_local_irq_save(flags);
+  	*p ^= mask;
+- 	raw_local_irq_restore(flags);
+  }
+  
+  static inline int
+--- 65,73 ----
+  
+  	p += bit >> 5;
+  
++ 	local_irq_save_hw(flags);
+  	*p ^= mask;
++ 	local_irq_restore_hw(flags);
+  }
+  
+  static inline int
+***************
+*** 79,88 ****
+  
+  	p += bit >> 5;
+  
+- 	raw_local_irq_save(flags);
+  	res = *p;
+  	*p = res | mask;
+- 	raw_local_irq_restore(flags);
+  
+  	return (res & mask) != 0;
+  }
+--- 79,88 ----
+  
+  	p += bit >> 5;
+  
++ 	local_irq_save_hw(flags);
+  	res = *p;
+  	*p = res | mask;
++ 	local_irq_restore_hw(flags);
+  
+  	return (res & mask) != 0;
+  }
+***************
+*** 96,105 ****
+  
+  	p += bit >> 5;
+  
+- 	raw_local_irq_save(flags);
+  	res = *p;
+  	*p = res & ~mask;
+- 	raw_local_irq_restore(flags);
+  
+  	return (res & mask) != 0;
+  }
+--- 96,105 ----
+  
+  	p += bit >> 5;
+  
++ 	local_irq_save_hw(flags);
+  	res = *p;
+  	*p = res & ~mask;
++ 	local_irq_restore_hw(flags);
+  
+  	return (res & mask) != 0;
+  }
+***************
+*** 113,122 ****
+  
+  	p += bit >> 5;
+  
+- 	raw_local_irq_save(flags);
+  	res = *p;
+  	*p = res ^ mask;
+- 	raw_local_irq_restore(flags);
+  
+  	return (res & mask) != 0;
+  }
+--- 113,122 ----
+  
+  	p += bit >> 5;
+  
++ 	local_irq_save_hw(flags);
+  	res = *p;
+  	*p = res ^ mask;
++ 	local_irq_restore_hw(flags);
+  
+  	return (res & mask) != 0;
+  }

@@ -1,0 +1,92 @@
+***************
+*** 158,167 ****
+  	unsigned long flags;
+  	int val;
+  
+- 	raw_local_irq_save(flags);
+  	val = v->counter;
+  	v->counter = val += i;
+- 	raw_local_irq_restore(flags);
+  
+  	return val;
+  }
+--- 158,167 ----
+  	unsigned long flags;
+  	int val;
+  
++ 	local_irq_save_hw(flags);
+  	val = v->counter;
+  	v->counter = val += i;
++ 	local_irq_restore_hw(flags);
+  
+  	return val;
+  }
+***************
+*** 172,181 ****
+  	unsigned long flags;
+  	int val;
+  
+- 	raw_local_irq_save(flags);
+  	val = v->counter;
+  	v->counter = val -= i;
+- 	raw_local_irq_restore(flags);
+  
+  	return val;
+  }
+--- 172,181 ----
+  	unsigned long flags;
+  	int val;
+  
++ 	local_irq_save_hw(flags);
+  	val = v->counter;
+  	v->counter = val -= i;
++ 	local_irq_restore_hw(flags);
+  
+  	return val;
+  }
+***************
+*** 186,196 ****
+  	int ret;
+  	unsigned long flags;
+  
+- 	raw_local_irq_save(flags);
+  	ret = v->counter;
+  	if (likely(ret == old))
+  		v->counter = new;
+- 	raw_local_irq_restore(flags);
+  
+  	return ret;
+  }
+--- 186,196 ----
+  	int ret;
+  	unsigned long flags;
+  
++ 	local_irq_save_hw(flags);
+  	ret = v->counter;
+  	if (likely(ret == old))
+  		v->counter = new;
++ 	local_irq_restore_hw(flags);
+  
+  	return ret;
+  }
+***************
+*** 199,207 ****
+  {
+  	unsigned long flags;
+  
+- 	raw_local_irq_save(flags);
+  	*addr &= ~mask;
+- 	raw_local_irq_restore(flags);
+  }
+  
+  #endif /* __LINUX_ARM_ARCH__ */
+--- 199,207 ----
+  {
+  	unsigned long flags;
+  
++ 	local_irq_save_hw(flags);
+  	*addr &= ~mask;
++ 	local_irq_restore_hw(flags);
+  }
+  
+  #endif /* __LINUX_ARM_ARCH__ */

@@ -1,0 +1,1 @@
+cmd_drivers/net/wireless/rt2x00/built-in.o :=  ld -EL    -r -o drivers/net/wireless/rt2x00/built-in.o drivers/net/wireless/rt2x00/rt2x00lib.o drivers/net/wireless/rt2x00/rt2x00usb.o drivers/net/wireless/rt2x00/rt2800lib.o drivers/net/wireless/rt2x00/rt2800usb.o 

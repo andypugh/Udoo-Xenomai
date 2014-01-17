@@ -1,0 +1,21 @@
+***************
+*** 90,97 ****
+  		generic_handle_irq(irq);
+  	}
+  
+  	/* AT91 specific workaround */
+  	irq_finish(irq);
+  
+  	irq_exit();
+  	set_irq_regs(old_regs);
+--- 90,99 ----
+  		generic_handle_irq(irq);
+  	}
+  
++ #ifndef CONFIG_IPIPE
+  	/* AT91 specific workaround */
+  	irq_finish(irq);
++ #endif /* !CONFIG_IPIPE */
+  
+  	irq_exit();
+  	set_irq_regs(old_regs);

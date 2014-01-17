@@ -1,0 +1,50 @@
+***************
+*** 17,22 ****
+  #include <linux/io.h>
+  #include <linux/syscore_ops.h>
+  #include <linux/slab.h>
+  
+  #include <mach/gpio.h>
+  
+--- 17,23 ----
+  #include <linux/io.h>
+  #include <linux/syscore_ops.h>
+  #include <linux/slab.h>
++ #include <linux/ipipe.h>
+  
+  #include <mach/gpio.h>
+  
+***************
+*** 39,45 ****
+  #endif
+  };
+  
+- static DEFINE_SPINLOCK(gpio_lock);
+  static struct pxa_gpio_chip *pxa_gpio_chips;
+  
+  #define for_each_gpio_chip(i, c)			\
+--- 40,46 ----
+  #endif
+  };
+  
++ static IPIPE_DEFINE_SPINLOCK(gpio_lock);
+  static struct pxa_gpio_chip *pxa_gpio_chips;
+  
+  #define for_each_gpio_chip(i, c)			\
+***************
+*** 220,226 ****
+  			while (n < BITS_PER_LONG) {
+  				loop = 1;
+  
+- 				generic_handle_irq(gpio_to_irq(gpio_base + n));
+  				n = find_next_bit(&gedr, BITS_PER_LONG, n + 1);
+  			}
+  		}
+--- 221,227 ----
+  			while (n < BITS_PER_LONG) {
+  				loop = 1;
+  
++ 				ipipe_handle_chained_irq(gpio_to_irq(gpio_base + n));
+  				n = find_next_bit(&gedr, BITS_PER_LONG, n + 1);
+  			}
+  		}

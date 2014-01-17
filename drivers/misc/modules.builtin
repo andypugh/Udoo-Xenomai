@@ -1,0 +1,2 @@
+kernel/drivers/misc/mxs-perfmon.ko
+kernel/drivers/misc/udoo_ard.ko
